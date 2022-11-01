@@ -1,23 +1,20 @@
 package com.example.application.views.main;
 
-import com.example.application.GreetService;
 import com.example.application.model.Test;
 import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridSingleSelectionModel;
-import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.data.renderer.NativeButtonRenderer;
-import com.vaadin.flow.data.selection.SingleSelect;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridSingleSelectionModel;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.renderer.LocalDateRenderer;
+import com.vaadin.flow.data.renderer.NativeButtonRenderer;
+import com.vaadin.flow.data.selection.SingleSelect;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
@@ -26,12 +23,14 @@ import java.util.List;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
 
-@Route
-@CssImport("./styles/shared-styles.css")
-@CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
-public class MainView extends VerticalLayout {
-    public MainView(@Autowired GreetService service) {
+@PageTitle("Main")
+@Route(value = "")
+public class MainView extends HorizontalLayout {
 
+    private TextField name;
+    private Button sayHello;
+
+    public MainView() {
         List<Test> tests = Arrays.asList(
                 new Test("Test1","link", LocalDate.now()),
                 new Test("Test2","link2", LocalDate.now()),
@@ -107,5 +106,5 @@ public class MainView extends VerticalLayout {
                 buttons
         );
     }
-}
 
+}

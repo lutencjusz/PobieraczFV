@@ -12,6 +12,7 @@ import com.vaadin.flow.component.grid.GridSingleSelectionModel;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -20,6 +21,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.data.selection.SingleSelect;
+import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -35,9 +37,9 @@ public class MainView extends VerticalLayout {
 
     public MainView() {
         Set<Test> tests = new HashSet<>();
-        tests.add(new Test("Test1", "link1", LocalDate.now()));
-        tests.add(new Test("Test2", "link2", LocalDate.now()));
-        tests.add(new Test("Test3", "link3", LocalDate.now()));
+        tests.add(new Test("Test1", "link1", LocalDate.now(),"todo"));
+        tests.add(new Test("Test2", "link2", LocalDate.now(),"pass"));
+        tests.add(new Test("Test3", "link3", LocalDate.now(),"fail"));
 
         HorizontalLayout logo = new HorizontalLayout();
 
@@ -54,15 +56,7 @@ public class MainView extends VerticalLayout {
         grid.addSelectionListener(selection -> {
             // System.out.printf("Number of selected people: %s%n", selection.getAllSelectedItems().size());
         });
-        grid.addColumn(new ComponentRenderer<>(test -> {
-            Checkbox checkbox = new Checkbox();
-            checkbox.setValue(test.isStatus());
-            checkbox.addValueChangeListener(
-                    event -> test.setStatus(event.getValue())
-            );
-            checkbox.setClassName("status_checkbox");
-            return checkbox;
-        })).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
+        grid.addColumn(createStatusComponentRenderer()).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(new ComponentRenderer<>(test -> {
             TextField textField = new TextField();
             textField.setValue(test.getName());
@@ -99,7 +93,7 @@ public class MainView extends VerticalLayout {
                     grid.getDataProvider().refreshAll();
                     System.out.println(grid.getDataProvider().getId(test));
                 }).withEventHandler("handleAdd", test -> {
-                    tests.add(new Test("Test4", "link4", LocalDate.now()));
+                    tests.add(new Test("Test4", "link4", LocalDate.now(),"todo"));
                     grid.getDataProvider().refreshAll();
                 })
         ).setHeader("Akcje");
@@ -134,7 +128,7 @@ public class MainView extends VerticalLayout {
         });
 
         addButton.addClickListener(buttonClickEvent -> {
-            tests.add(new Test("Test6", "link6", LocalDate.now()));
+            tests.add(new Test("Test6", "link6", LocalDate.now(),"todo"));
             grid.getDataProvider().refreshAll();
         });
 
@@ -146,5 +140,26 @@ public class MainView extends VerticalLayout {
                 buttons
         );
     }
+    private static final SerializableBiConsumer<Span, Test> statusComponentUpdater = (span, test) -> {
+        String theme = "badge todo";
+        switch (test.getStatus()){
+            case "todo":{
+                theme = "badge todo";
+                break;
+            }
+            case "pass":{
+                theme = "badge success";
+                break;
+            }
+            case "fail":{
+                theme = "badge error";
+            }
+        }
+        span.getElement().setAttribute("theme", theme);
+        span.setText(test.getStatus().toUpperCase());
+    };
 
+    private static ComponentRenderer<Span, Test> createStatusComponentRenderer() {
+        return new ComponentRenderer<>(Span::new, statusComponentUpdater);
+    }
 }

@@ -9,18 +9,23 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSingleSelectionModel;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
+import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.data.selection.SingleSelect;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.*;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
 
@@ -28,15 +33,12 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 @Route(value = "")
 public class MainView extends VerticalLayout {
 
-    private TextField name;
-    private Button sayHello;
-
     public MainView() {
-        List<Test> tests = Arrays.asList(
-                new Test("Test1","link", LocalDate.now()),
-                new Test("Test2","link2", LocalDate.now()),
-                new Test("Test3","link3", LocalDate.now())
-        );
+        String selectedTest;
+        Set<Test> tests = new HashSet<>();
+        tests.add(new Test("Test1", "link1", LocalDate.now()));
+        tests.add(new Test("Test2", "link2", LocalDate.now()));
+        tests.add(new Test("Test3", "link3", LocalDate.now()));
 
         HorizontalLayout logo = new HorizontalLayout();
 
@@ -57,15 +59,39 @@ public class MainView extends VerticalLayout {
                 .setHeader("Estymowana data dostarczenia").setKey("date");
         grid.addColumn(new NativeButtonRenderer<>("Usuń",
                 clickedItem -> {
-                    System.out.println("Kliknąłem usuń: "+clickedItem.getName());
+                    System.out.println("Kliknąłem usuń: " + clickedItem.getName());
                 })
         );
+        grid.addColumn(new ComponentRenderer<>(test -> {
+            if (test.getStatus().equals("new")) {
+                return new Icon(VaadinIcon.MALE);
+            } else {
+                return new Icon(VaadinIcon.FEMALE);
+            }
+        })).setHeader("Gender");
+
+        grid.addColumn(TemplateRenderer.<Test>of(
+                        "<button on-click='handleUpdate'>Update</button>" +
+                                "<button on-click='handleRemove'>Remove</button>" +
+                                "<button on-click='handleAdd'>Add</button>"
+                ).withEventHandler("handleUpdate", test -> {
+                    test.setName(test.getName() + " poprawiony");
+                    grid.getDataProvider().refreshItem(test);
+                }).withEventHandler("handleRemove", test -> {
+                    tests.remove(test);
+                    grid.getDataProvider().refreshAll();
+                    System.out.println(grid.getDataProvider().getId(test));
+                }).withEventHandler("handleAdd", test -> {
+                    tests.add(new Test("Test4", "link4", LocalDate.now()));
+                    grid.getDataProvider().refreshAll();
+                })
+        ).setHeader("Akcje");
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.setColumnReorderingAllowed(true);
         SingleSelect<Grid<Test>, Test> testSingleSelect =
                 grid.asSingleSelect();
         testSingleSelect.addValueChangeListener(e -> {
-            Test selectedTest = e.getValue();
+            System.out.println(e.getValue().getName());
         });
         grid.addItemClickListener(event -> System.out
                 .println(("Kliknięto wiersz: " + event.getItem().getName())));
@@ -94,9 +120,13 @@ public class MainView extends VerticalLayout {
         buttons.add(cancelButton);
 
         cancelButton.addClickListener(buttonClickEvent -> {
+            tests.clear();
+            grid.getDataProvider().refreshAll();
         });
 
         addButton.addClickListener(buttonClickEvent -> {
+            tests.add(new Test("Test6", "link6", LocalDate.now()));
+            grid.getDataProvider().refreshAll();
         });
 
         addButton.addClickShortcut(Key.ENTER);

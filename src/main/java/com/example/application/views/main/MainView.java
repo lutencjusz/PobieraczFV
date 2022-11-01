@@ -10,6 +10,7 @@ import com.vaadin.flow.component.grid.GridSingleSelectionModel;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
@@ -23,9 +24,9 @@ import java.util.List;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
 
-@PageTitle("Main")
+@PageTitle("Tests")
 @Route(value = "")
-public class MainView extends HorizontalLayout {
+public class MainView extends VerticalLayout {
 
     private TextField name;
     private Button sayHello;

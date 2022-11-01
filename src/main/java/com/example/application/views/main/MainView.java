@@ -13,6 +13,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -54,7 +56,7 @@ public class MainView extends VerticalLayout {
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.setItems(tests);
         grid.addSelectionListener(selection -> {
-            // System.out.printf("Number of selected people: %s%n", selection.getAllSelectedItems().size());
+             System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size());
         });
         grid.addColumn(createStatusComponentRenderer()).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(new ComponentRenderer<>(test -> {
@@ -80,23 +82,34 @@ public class MainView extends VerticalLayout {
                     System.out.println("Kliknąłem usuń: " + clickedItem.getName());
                 })
         );
+        grid.addColumn(
+                new ComponentRenderer<>(Button::new, (button, test) -> {
+                    button.addThemeVariants(ButtonVariant.LUMO_ICON,
+                            ButtonVariant.LUMO_ERROR,
+                            ButtonVariant.LUMO_TERTIARY);
+                    button.addClickListener(e -> {
+                        tests.remove(test);
+                        grid.getDataProvider().refreshAll();
+                    });
+                    button.setIcon(new Icon(VaadinIcon.TRASH));
+                })).setHeader("Akcje");
 
-        grid.addColumn(TemplateRenderer.<Test>of(
-                        "<button on-click='handleUpdate'>Update</button>" +
-                                "<button on-click='handleRemove'>Remove</button>" +
-                                "<button on-click='handleAdd'>Add</button>"
-                ).withEventHandler("handleUpdate", test -> {
-                    test.setName(test.getName() + " poprawiony");
-                    grid.getDataProvider().refreshItem(test);
-                }).withEventHandler("handleRemove", test -> {
-                    tests.remove(test);
-                    grid.getDataProvider().refreshAll();
-                    System.out.println(grid.getDataProvider().getId(test));
-                }).withEventHandler("handleAdd", test -> {
-                    tests.add(new Test("Test4", "link4", LocalDate.now(),"todo"));
-                    grid.getDataProvider().refreshAll();
-                })
-        ).setHeader("Akcje");
+//        grid.addColumn(TemplateRenderer.<Test>of(
+//                        "<button on-click='handleUpdate'>Update</button>" +
+//                                "<button on-click='handleRemove'>Remove</button>" +
+//                                "<button on-click='handleAdd'>Add</button>"
+//                ).withEventHandler("handleUpdate", test -> {
+//                    test.setName(test.getName() + " poprawiony");
+//                    grid.getDataProvider().refreshItem(test);
+//                }).withEventHandler("handleRemove", test -> {
+//                    tests.remove(test);
+//                    grid.getDataProvider().refreshAll();
+//                    System.out.println(grid.getDataProvider().getId(test));
+//                }).withEventHandler("handleAdd", test -> {
+//                    tests.add(new Test("Test4", "link4", LocalDate.now(),"todo"));
+//                    grid.getDataProvider().refreshAll();
+//                })
+//        ).setHeader("Akcje");
         grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
                 GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
         grid.setColumnReorderingAllowed(true);
@@ -105,6 +118,8 @@ public class MainView extends VerticalLayout {
                 .println(("Kliknięto wiersz: " + event.getItem().getName())));
 
         grid.getColumnByKey("name")
+                .setSortable(true);
+        grid.getColumnByKey("status")
                 .setSortable(true);
         grid.getColumnByKey("link")
                 .setSortable(false);

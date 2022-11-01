@@ -48,8 +48,12 @@ public class MainView extends VerticalLayout {
                 new H2("Aplikacja Vaadin")
         );
 
-        Grid<Test> grid = new Grid<>();
+        Grid<Test> grid = new Grid<>(Test.class, false);
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.setItems(tests);
+        grid.addSelectionListener(selection -> {
+            // System.out.printf("Number of selected people: %s%n", selection.getAllSelectedItems().size());
+        });
         grid.addColumn(new ComponentRenderer<>(test -> {
             Checkbox checkbox = new Checkbox();
             checkbox.setValue(test.isStatus());
@@ -66,7 +70,7 @@ public class MainView extends VerticalLayout {
                     event -> test.setName(event.getValue()));
             textField.setClearButtonVisible(true);
             return textField;
-        })).setHeader("Nazwa").setKey("name").setFooter(new Html("<b>Suma</b>"));
+        })).setHeader("Nazwa").setKey("name").setFooter(new Html("<b>Suma</b>")).setResizable(true);
         grid.addColumn(Test::getUrl).setHeader("Link").setKey("link");
         grid.addColumn(new ComponentRenderer<>(test -> {
             DatePicker datePicker = new DatePicker();
@@ -101,20 +105,10 @@ public class MainView extends VerticalLayout {
         ).setHeader("Akcje");
         grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
                 GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.setColumnReorderingAllowed(true);
-        SingleSelect<Grid<Test>, Test> testSingleSelect =
-                grid.asSingleSelect();
-        testSingleSelect.addValueChangeListener(e -> {
-            System.out.println(e.getValue().getName());
-        });
+
         grid.addItemClickListener(event -> System.out
                 .println(("Kliknięto wiersz: " + event.getItem().getName())));
-
-        GridSingleSelectionModel<Test> singleSelect =
-                (GridSingleSelectionModel<Test>) grid
-                        .getSelectionModel();
-        singleSelect.setDeselectAllowed(false);
 
         grid.getColumnByKey("name")
                 .setSortable(true);

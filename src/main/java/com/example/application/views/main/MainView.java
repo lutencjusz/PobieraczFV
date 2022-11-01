@@ -75,6 +75,7 @@ public class MainView extends VerticalLayout {
                         .getSelectionModel();
         singleSelect.setDeselectAllowed(false);
 
+
         grid.getColumnByKey("name")
                 .setSortable(true);
         grid.getColumnByKey("link")

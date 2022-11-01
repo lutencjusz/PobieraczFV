@@ -11,13 +11,12 @@ public class Test {
     private String name;
     private String url;
     private LocalDate estimatedDeliveryDate;
-
-    private String status;
+    private boolean status;
 
     public Test(String name, String url, LocalDate estimatedDeliveryDate) {
         this.name = name;
         this.url = url;
         this.estimatedDeliveryDate = estimatedDeliveryDate;
-        this.status="new";
+        this.status=true;
     }
 }

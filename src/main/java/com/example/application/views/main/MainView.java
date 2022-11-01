@@ -5,17 +5,18 @@ import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSingleSelectionModel;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.renderer.LocalDateRenderer;
+
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.data.selection.SingleSelect;
@@ -23,8 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
+
 import java.util.*;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
@@ -34,7 +34,6 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 public class MainView extends VerticalLayout {
 
     public MainView() {
-        String selectedTest;
         Set<Test> tests = new HashSet<>();
         tests.add(new Test("Test1", "link1", LocalDate.now()));
         tests.add(new Test("Test2", "link2", LocalDate.now()));
@@ -51,24 +50,38 @@ public class MainView extends VerticalLayout {
 
         Grid<Test> grid = new Grid<>();
         grid.setItems(tests);
-        grid.addColumn(Test::getName).setHeader("Nazwa").setKey("name").setFooter(new Html("<b>Suma</b>"));
+        grid.addColumn(new ComponentRenderer<>(test -> {
+            Checkbox checkbox = new Checkbox();
+            checkbox.setValue(test.isStatus());
+            checkbox.addValueChangeListener(
+                    event -> test.setStatus(event.getValue())
+            );
+            checkbox.setClassName("status_checkbox");
+            return checkbox;
+        })).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
+        grid.addColumn(new ComponentRenderer<>(test -> {
+            TextField textField = new TextField();
+            textField.setValue(test.getName());
+            textField.addValueChangeListener(
+                    event -> test.setName(event.getValue()));
+            textField.setClearButtonVisible(true);
+            return textField;
+        })).setHeader("Nazwa").setKey("name").setFooter(new Html("<b>Suma</b>"));
         grid.addColumn(Test::getUrl).setHeader("Link").setKey("link");
-        grid.addColumn(new LocalDateRenderer<>(
-                        Test::getEstimatedDeliveryDate,
-                        "dd/MM/yyyy"))
-                .setHeader("Estymowana data dostarczenia").setKey("date");
+        grid.addColumn(new ComponentRenderer<>(test -> {
+            DatePicker datePicker = new DatePicker();
+            datePicker.setValue(test.getEstimatedDeliveryDate());
+            datePicker.addValueChangeListener(
+                    event -> test.setEstimatedDeliveryDate(event.getValue())
+            );
+            datePicker.setLocale(new Locale("PL"));
+            return datePicker;
+        })).setHeader("Estymowana data dostarczenia").setKey("date");
         grid.addColumn(new NativeButtonRenderer<>("Usuń",
                 clickedItem -> {
                     System.out.println("Kliknąłem usuń: " + clickedItem.getName());
                 })
         );
-        grid.addColumn(new ComponentRenderer<>(test -> {
-            if (test.getStatus().equals("new")) {
-                return new Icon(VaadinIcon.MALE);
-            } else {
-                return new Icon(VaadinIcon.FEMALE);
-            }
-        })).setHeader("Gender");
 
         grid.addColumn(TemplateRenderer.<Test>of(
                         "<button on-click='handleUpdate'>Update</button>" +
@@ -86,6 +99,8 @@ public class MainView extends VerticalLayout {
                     grid.getDataProvider().refreshAll();
                 })
         ).setHeader("Akcje");
+        grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
+                GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.setColumnReorderingAllowed(true);
         SingleSelect<Grid<Test>, Test> testSingleSelect =

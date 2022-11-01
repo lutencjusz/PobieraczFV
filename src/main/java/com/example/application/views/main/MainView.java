@@ -3,12 +3,10 @@ package com.example.application.views.main;
 import com.example.application.model.Test;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridSingleSelectionModel;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
@@ -17,13 +15,9 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 
-import com.vaadin.flow.data.renderer.NativeButtonRenderer;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
-import com.vaadin.flow.data.selection.SingleSelect;
-import com.vaadin.flow.function.SerializableBiConsumer;
+import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -39,13 +33,14 @@ public class MainView extends VerticalLayout {
 
     public MainView() {
         Set<Test> tests = new HashSet<>();
-        tests.add(new Test("Test1", "link1", LocalDate.now(),"todo"));
-        tests.add(new Test("Test2", "link2", LocalDate.now(),"pass"));
-        tests.add(new Test("Test3", "link3", LocalDate.now(),"fail"));
+        tests.add(new Test("Test1", "link1", "FV0001","dropboxLink",LocalDate.now(),"todo"));
+        tests.add(new Test("Test2", "link2", "FV0001","dropboxLink",LocalDate.now(),"pass"));
+        tests.add(new Test("Test3", "link3", "FV0001","dropboxLink",LocalDate.now(),"fail"));
 
         HorizontalLayout logo = new HorizontalLayout();
 
         Image image = new Image("C:\\Data\\Java\\vaadintests\\target\\classes\\images\\icon.png", "Logo");
+        Button buttonLink = new Button("Page 1", event -> UI.getCurrent().navigate("https:\\\\www.google.pl\\"));
 
         logo.add(
                 image,
@@ -58,30 +53,12 @@ public class MainView extends VerticalLayout {
         grid.addSelectionListener(selection -> {
              System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size());
         });
-        grid.addColumn(createStatusComponentRenderer()).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
-        grid.addColumn(new ComponentRenderer<>(test -> {
-            TextField textField = new TextField();
-            textField.setValue(test.getName());
-            textField.addValueChangeListener(
-                    event -> test.setName(event.getValue()));
-            textField.setClearButtonVisible(true);
-            return textField;
-        })).setHeader("Nazwa").setKey("name").setFooter(new Html("<b>Suma</b>")).setResizable(true);
-        grid.addColumn(Test::getUrl).setHeader("Link").setKey("link");
-        grid.addColumn(new ComponentRenderer<>(test -> {
-            DatePicker datePicker = new DatePicker();
-            datePicker.setValue(test.getEstimatedDeliveryDate());
-            datePicker.addValueChangeListener(
-                    event -> test.setEstimatedDeliveryDate(event.getValue())
-            );
-            datePicker.setLocale(new Locale("PL"));
-            return datePicker;
-        })).setHeader("Estymowana data dostarczenia").setKey("date");
-        grid.addColumn(new NativeButtonRenderer<>("Usuń",
-                clickedItem -> {
-                    System.out.println("Kliknąłem usuń: " + clickedItem.getName());
-                })
-        );
+
+        grid.addComponentColumn(test -> createStatusBadge(test.getStatus())).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
+        grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(new Html("<b>Suma</b>")).setResizable(true);
+        grid.addColumn(Test::getNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true);
+        grid.addColumn(Test::getDropboxLink).setHeader("Link do Dropbox").setKey("link");
+        grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy")).setSortable(true).setHeader("Estymowana data dostarczenia").setKey("date");
         grid.addColumn(
                 new ComponentRenderer<>(Button::new, (button, test) -> {
                     button.addThemeVariants(ButtonVariant.LUMO_ICON,
@@ -143,7 +120,7 @@ public class MainView extends VerticalLayout {
         });
 
         addButton.addClickListener(buttonClickEvent -> {
-            tests.add(new Test("Test6", "link6", LocalDate.now(),"todo"));
+            tests.add(new Test("Test6", "link6", "FV0001","dropboxLink", LocalDate.now(),"todo"));
             grid.getDataProvider().refreshAll();
         });
 
@@ -151,30 +128,31 @@ public class MainView extends VerticalLayout {
 
         add(
                 logo,
+                buttonLink,
                 grid,
                 buttons
         );
     }
-    private static final SerializableBiConsumer<Span, Test> statusComponentUpdater = (span, test) -> {
-        String theme = "badge todo";
-        switch (test.getStatus()){
-            case "todo":{
-                theme = "badge todo";
-                break;
-            }
-            case "pass":{
-                theme = "badge success";
-                break;
-            }
-            case "fail":{
-                theme = "badge error";
-            }
-        }
-        span.getElement().setAttribute("theme", theme);
-        span.setText(test.getStatus().toUpperCase());
-    };
 
-    private static ComponentRenderer<Span, Test> createStatusComponentRenderer() {
-        return new ComponentRenderer<>(Span::new, statusComponentUpdater);
+    private Span createStatusBadge(String status) {
+        String theme;
+        switch (status) {
+            case "todo":
+                theme = "badge primary";
+                break;
+            case "pass":
+                theme = "badge success primary";
+                break;
+            case "fail":
+                theme = "badge error primary";
+                break;
+            default:
+                theme = "badge contrast primary";
+                break;
+        }
+        Span badge = new Span(status.toUpperCase());
+        badge.getStyle().set("width","60px");
+        badge.getElement().getThemeList().add(theme);
+        return badge;
     }
 }

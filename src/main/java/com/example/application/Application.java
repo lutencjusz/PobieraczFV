@@ -9,14 +9,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * The entry point of the Spring Boot application.
- *
  * Use the @PWA annotation make the application installable on phones, tablets
  * and some desktop browsers.
  *
  */
 @SpringBootApplication
 @Theme(value = "mytodo")
-@PWA(name = "My Todo", shortName = "My Todo", offlineResources = {})
+@PWA(name = "Moje faktury", shortName = "Moje FV", offlineResources = {})
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 public class Application implements AppShellConfigurator {
 

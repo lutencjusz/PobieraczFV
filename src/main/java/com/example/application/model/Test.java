@@ -1,5 +1,6 @@
 package com.example.application.model;
 
+import com.vaadin.flow.component.button.Button;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,12 +17,15 @@ public class Test {
     private LocalDate estimatedDeliveryDate;
     private String status;
 
+    private Button progress;
+
     public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, String status) {
         this.name = name;
         this.url = url;
         this.estimatedDeliveryDate = estimatedDeliveryDate;
-        this.status=status;
-        this.nrFv=nrFv;
+        this.status = status;
+        this.nrFv = nrFv;
         this.dropboxLink = dropboxLink;
+        this.progress = null;
     }
 }

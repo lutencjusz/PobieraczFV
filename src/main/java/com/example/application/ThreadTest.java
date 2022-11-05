@@ -1,7 +1,6 @@
 package com.example.application;
 
 import com.example.application.model.Test;
-import com.vaadin.flow.component.grid.Grid;
 
 public class ThreadTest extends Thread {
 

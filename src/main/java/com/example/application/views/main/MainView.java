@@ -10,6 +10,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.StyleSheet;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
@@ -22,6 +23,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -153,8 +155,8 @@ public class MainView extends VerticalLayout {
         });
 
         addButton.addClickListener(buttonClickEvent -> {
-            inMemoRep.add(new Test("Test6", "link6", "FV0001", "dropboxLink", LocalDate.now(), "todo"));
-            refreshItems();
+            Dialog dialog = createTest();
+            dialog.open();
         });
 
         addButton.addClickShortcut(Key.ENTER);
@@ -191,6 +193,35 @@ public class MainView extends VerticalLayout {
         badge.getStyle().set("width", "80px");
         badge.getElement().getThemeList().add(theme);
         return badge;
+    }
+
+    private Dialog createTest() {
+
+        Dialog addTestDialog = new Dialog();
+        addTestDialog.setHeaderTitle("Dodaj test");
+
+        VerticalLayout addTestLayout = new VerticalLayout();
+
+        TextField name = new TextField("Nazwa serwisu");
+        TextField url = new TextField("Url");
+        TextField nrFv = new TextField("Numer FV");
+        TextField dropboxLink = new TextField("dropboxLink");
+
+        addTestLayout.add(name, url, nrFv, dropboxLink);
+
+        Button cancelBtn = new Button("Anuluj");
+        cancelBtn.addClickListener(buttonClickEvent -> addTestDialog.close());
+
+        Button addBtn = new Button("Dodaj");
+        addBtn.addClickListener(buttonClickEvent -> {
+            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), "todo"));
+            addTestDialog.close();
+            refreshItems();
+        });
+        addTestDialog.add(addTestLayout);
+        addTestDialog.getFooter().add(addBtn, cancelBtn);
+
+        return addTestDialog;
     }
 
     private HorizontalLayout createButtons(Test test, List<Test> tests, Grid<Test> grid) {
@@ -241,7 +272,7 @@ public class MainView extends VerticalLayout {
             notification.setPosition(Notification.Position.TOP_CENTER);
             notification.setOpened(true);
             notification.setVisible(true);
-            notification.addOpenedChangeListener(not->{
+            notification.addOpenedChangeListener(not -> {
                 refreshItems();
             });
             ThreadTest testThread = new ThreadTest(test);

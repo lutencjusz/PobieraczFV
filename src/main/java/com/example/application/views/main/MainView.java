@@ -25,6 +25,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,15 +40,18 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 @PageTitle("Tests")
 @Route(value = "")
 @StyleSheet("/style.css")
-public class MainView extends VerticalLayout {
+public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();
+
+    Html servicesCounter;
 
     Grid<Test> grid;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        servicesCounter = new Html("<b>Początkowa ilość serwisów: " + inMemoRep.getTests().size() + "</b>");
         super.onAttach(attachEvent);
         HorizontalLayout logo = new HorizontalLayout();
         Image image = new Image("/icon.png", "Logo");
@@ -81,7 +86,7 @@ public class MainView extends VerticalLayout {
         });
 
         grid.addComponentColumn(test -> createStatusBadge(test.getStatus())).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
-        grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(new Html("<b>Początkowa ilość serwisów: " + inMemoRep.getTests().size() + "</b>")).setResizable(true);
+        grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true);
         grid.addColumn(Test::getNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true);
         grid.addColumn(Test::getDropboxLink).setHeader("Link do Dropbox").setKey("link");
         grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy")).setSortable(true).setHeader("Estymowana data dostarczenia").setKey("date");
@@ -297,5 +302,8 @@ public class MainView extends VerticalLayout {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
     }
 }

@@ -57,8 +57,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         Image image = new Image("/icon.png", "Logo");
         image.setHeight("10%");
         image.setWidth("10%");
+        image.setId("logo");
 
         DatePicker datePicker = new DatePicker("Wybierz datę wystawienia faktury:");
+        datePicker.setId("dataPicker");
         DatePicker.DatePickerI18n polishI18nDatePicker = new DatePicker.DatePickerI18n();
         polishI18nDatePicker.setMonthNames(List.of("Styczeń", "Luty", "Marzec", "Kwiecień",
                 "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik",
@@ -91,9 +93,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid.addColumn(Test::getDropboxLink).setHeader("Link do Dropbox").setKey("link");
         grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy")).setSortable(true).setHeader("Estymowana data dostarczenia").setKey("date");
         grid.addComponentColumn(test -> {
-            Image imagePng = new Image("/png/" + test.getName().toLowerCase() + ".png", "screen shot");
+            String linkScreen = "/png/" + test.getName().toLowerCase() + ".png";
+            Image imagePng = new Image(linkScreen, "screen shot");
             imagePng.setWidth("70px");
             imagePng.setHeight("50px");
+            imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
             return imagePng;
         }).setKey("screenshot").setHeader("Screeny");
         grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid)).setHeader("Akcje");
@@ -117,15 +121,19 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         buttons.setJustifyContentMode(AROUND);
 
         Button addButton = new Button("Dodaj test");
+        addButton.setId("addButton");
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button cancelButton = new Button("Usuń wszystko");
+        cancelButton.setId("cancelButton");
         cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
 
         Button initButton = new Button("Przywróć ustawienia");
+        initButton.setId("initButton");
         initButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
 
         Button executeTestsButton = new Button("Wykonaj testy");
+        executeTestsButton.setId("executeTestsButton");
         executeTestsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
         buttons.add(executeTestsButton);
@@ -164,7 +172,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             dialog.open();
         });
 
-        addButton.addClickShortcut(Key.ENTER);
+        executeTestsButton.addClickShortcut(Key.ENTER);
         refreshItems();
         add(
                 logo,
@@ -227,6 +235,22 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         addTestDialog.getFooter().add(addBtn, cancelBtn);
 
         return addTestDialog;
+    }
+
+    private Dialog openZoomImageDialog(String fvLink) {
+        Dialog zoomImageDialog = new Dialog();
+
+        Button cancelZoomButton = new Button("Zamknij");
+        cancelZoomButton.addClickListener(buttonClickEvent -> zoomImageDialog.close());
+
+        Image zoomImage = new Image(fvLink, "FV");
+        zoomImage.setHeight("100%");
+        zoomImage.setWidth("100%");
+
+        zoomImageDialog.add(zoomImage);
+        zoomImageDialog.getFooter().add(cancelZoomButton);
+
+        return zoomImageDialog;
     }
 
     private HorizontalLayout createButtons(Test test, List<Test> tests, Grid<Test> grid) {
@@ -303,6 +327,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             e.printStackTrace();
         }
     }
+
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
     }

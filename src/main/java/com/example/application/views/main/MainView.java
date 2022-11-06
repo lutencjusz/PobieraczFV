@@ -13,6 +13,7 @@ import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
@@ -22,7 +23,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -32,10 +32,12 @@ import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
-
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
+
 
 @PageTitle("Tests")
 @Route(value = "")
@@ -73,10 +75,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         polishI18nDatePicker.setDateFormat("dd/MM/yyyy");
         polishI18nDatePicker.setFirstDayOfWeek(1);
         datePicker.setI18n(polishI18nDatePicker);
+        datePicker.getElement().setProperty("title", "Data wygenerowania FV, istotna przy pobieraniu z Fakturowni (rok i miesiąc)");
 
         logo.add(
                 image,
-                new H2("Fakturowania"),
+                new H2("Pobieracz faktur"),
                 datePicker
         );
 
@@ -88,16 +91,21 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
 
         grid.addComponentColumn(test -> createStatusBadge(test.getStatus())).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
-        grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true);
-        grid.addColumn(Test::getNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true);
+        grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true)
+                .getElement().setProperty("title", "Nazwa serwisu, z którego jest pobierana FV");
+        grid.addColumn(Test::getNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true).getElement().setProperty("title", "Numer ostatniej pobranej FV");
         grid.addColumn(Test::getDropboxLink).setHeader("Link do Dropbox").setKey("link");
-        grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy")).setSortable(true).setHeader("Estymowana data dostarczenia").setKey("date");
+        grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy"))
+                .setSortable(true).setHeader("Estymowana data dostarczenia")
+                .setKey("date")
+                .getElement().setProperty("title", "Ostatnia data pobrania FV");;
         grid.addComponentColumn(test -> {
             String linkScreen = "/png/" + test.getName().toLowerCase() + ".png";
             Image imagePng = new Image(linkScreen, "screen shot");
             imagePng.setWidth("70px");
             imagePng.setHeight("50px");
             imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
+            imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie");
             return imagePng;
         }).setKey("screenshot").setHeader("Screeny");
         grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid)).setHeader("Akcje");
@@ -105,9 +113,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
                 GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
         grid.setColumnReorderingAllowed(true);
-
-//        grid.addItemClickListener(event -> System.out
-//                .println(("Kliknięto wiersz: " + event.getItem().getName())));
 
         grid.getColumnByKey("name")
                 .setSortable(true);
@@ -123,18 +128,22 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         Button addButton = new Button("Dodaj test");
         addButton.setId("addButton");
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addButton.getElement().setProperty("title", "Dodaje nowy test do zestawienia. Test musi być wcześniej napisany i skonfigurowany w systemie");
 
         Button cancelButton = new Button("Usuń wszystko");
         cancelButton.setId("cancelButton");
         cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        cancelButton.getElement().setProperty("title", "Usuwa wszystkie wpisy z zestawienia, wpisy pojawią się po wciśnięciu 'Przywróć ustawienia'");
 
         Button initButton = new Button("Przywróć ustawienia");
         initButton.setId("initButton");
         initButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        initButton.getElement().setProperty("title", "Przywraca początkowe ustawienia wszystkich wpisów");
 
         Button executeTestsButton = new Button("Wykonaj testy");
         executeTestsButton.setId("executeTestsButton");
         executeTestsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+        executeTestsButton.getElement().setProperty("title", "Wykonuje zaznaczone testy oraz te usunięte, które były zaznaczone przed usunięciem");
 
         buttons.add(executeTestsButton);
         buttons.add(addButton);
@@ -188,23 +197,29 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private Span createStatusBadge(String status) {
         String theme;
+        String statusToolTipDesc = "Status: ";
         switch (status) {
             case "todo":
                 theme = "badge primary";
+                statusToolTipDesc = statusToolTipDesc + "TODO - test nie został uruchomiony, dane z poprzedniego testu";
                 break;
             case "pass":
                 theme = "badge success primary";
+                statusToolTipDesc = statusToolTipDesc + "PASS - test wykonany pozytywnie, dane są aktualne";
                 break;
             case "fail":
                 theme = "badge error primary";
+                statusToolTipDesc = statusToolTipDesc + "FAIL - test nie zakończył się pozytywnie, dane z poprzedniego testu";
                 break;
             default:
                 theme = "badge contrast primary";
+                statusToolTipDesc = statusToolTipDesc + "test jest w trakcie wykonywania...";
                 break;
         }
         Span badge = new Span(status.toUpperCase());
         badge.getStyle().set("width", "80px");
         badge.getElement().getThemeList().add(theme);
+        badge.getElement().setProperty("title", statusToolTipDesc);
         return badge;
     }
 
@@ -266,6 +281,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             grid.getDataProvider().refreshAll();
         });
         trashButton.setIcon(new Icon(VaadinIcon.TRASH));
+        trashButton.getElement().setProperty("title", "Usuwa pojedynczy test z panelu. Test zostanie przywrócony po wciśnięciu 'Przywróć ustawienia'");
 
         /* Przycisk uruchamiający pojedynczy test */
         Button testButton = new Button();
@@ -278,19 +294,25 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             executionTests(oneTest);
             refreshItems();
         });
+        testButton.getElement().setProperty("title", "Uruchomienie pojedynczego testu");
         testButton.setIcon(new Icon(VaadinIcon.PLAY_CIRCLE));
 
-        /* pokazuje, że tes został uruchomiony */
-        Button progressButton = new Button();
-        progressButton.addThemeVariants(ButtonVariant.LUMO_ICON,
-                ButtonVariant.LUMO_CONTRAST,
-                ButtonVariant.LUMO_TERTIARY);
-        progressButton.setIcon(new Icon(VaadinIcon.PROGRESSBAR));
-        progressButton.setVisible(false);
-        test.setProgress(progressButton);
+        /* link poglądu FV*/
+        String linkScreen = "/fv/" + test.getName() + "_" + test.getNrFv().replace("/", "-") + ".pdf";
+        Anchor downloadPdf = new Anchor(linkScreen);
+        downloadPdf.setTarget("_blank");
+        downloadPdf.setEnabled(test.getStatus().equals("pass"));
+
+        Button downloadPdfButton = new Button();
+        downloadPdfButton.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.MATERIAL_CONTAINED, ButtonVariant.LUMO_TERTIARY);
+        downloadPdfButton.setIcon(new Icon(VaadinIcon.DOWNLOAD));
+        downloadPdfButton.getElement().setProperty("title", "Otwiera na osobnej zakładce FV(pdf)");
+
+        downloadPdf.add(downloadPdfButton);
 
         /* Dodanie przycisków do layoutu */
-        horizontalLayout.add(testButton, trashButton, progressButton);
+        horizontalLayout.add(downloadPdf, testButton, trashButton);
         return horizontalLayout;
     }
 

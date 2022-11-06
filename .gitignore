@@ -14,6 +14,7 @@ frontend/generated/
 pnpmfile.js
 vite.generated.ts
 png/
+fv/
 
 # Browser drivers for local integration tests
 drivers/

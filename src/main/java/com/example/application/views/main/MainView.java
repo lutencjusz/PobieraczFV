@@ -3,9 +3,8 @@ package com.example.application.views.main;
 import com.example.application.ThreadTest;
 import com.example.application.model.Test;
 import com.example.application.repo.InMemoRep;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.Key;
+import com.example.application.utils.Broadcaster;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -25,16 +24,15 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.shared.Registration;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
 
@@ -44,10 +42,13 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 @StyleSheet("/style.css")
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
+    Registration broadcasterRegistration;
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();
 
     Html servicesCounter;
+
+    Image imagePng;
 
     Grid<Test> grid;
 
@@ -90,7 +91,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size());
         });
 
-        grid.addComponentColumn(test -> createStatusBadge(test.getStatus())).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
+        grid.addComponentColumn(this::createStatusBadge).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true)
                 .getElement().setProperty("title", "Nazwa serwisu, z którego jest pobierana FV");
         grid.addColumn(Test::getNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true).getElement().setProperty("title", "Numer ostatniej pobranej FV");
@@ -98,16 +99,9 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy"))
                 .setSortable(true).setHeader("Estymowana data dostarczenia")
                 .setKey("date")
-                .getElement().setProperty("title", "Ostatnia data pobrania FV");;
-        grid.addComponentColumn(test -> {
-            String linkScreen = "/png/" + test.getName().toLowerCase() + ".png";
-            Image imagePng = new Image(linkScreen, "screen shot");
-            imagePng.setWidth("70px");
-            imagePng.setHeight("50px");
-            imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
-            imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie");
-            return imagePng;
-        }).setKey("screenshot").setHeader("Screeny");
+                .getElement().setProperty("title", "Ostatnia data pobrania FV");
+        ;
+        grid.addComponentColumn(this::createImagePng).setKey("screenshot").setHeader("Screeny");
         grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid)).setHeader("Akcje");
 
         grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
@@ -183,11 +177,18 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         executeTestsButton.addClickShortcut(Key.ENTER);
         refreshItems();
+
         add(
                 logo,
                 grid,
                 buttons
         );
+
+        broadcasterRegistration = Broadcaster.register(message -> {
+            System.out.println("Test '" + message + "' się zakończył i odświeżam grid");
+            UI ui = attachEvent.getUI();
+            ui.access(this::refreshItems);
+        });
     }
 
     public void refreshItems() {
@@ -195,10 +196,25 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid.getDataProvider().refreshAll();
     }
 
-    private Span createStatusBadge(String status) {
+    public Image createImagePng(Test test) {
+        String linkScreen;
+        if (test.getStatus().equals("pass")) {
+            linkScreen = "/png/" + test.getName().toLowerCase() + ".png";
+        } else {
+            linkScreen = "icon.png";
+        }
+        imagePng = new Image(linkScreen, "screen shot");
+        imagePng.setWidth("70px");
+        imagePng.setHeight("50px");
+        imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
+        imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie");
+        return imagePng;
+    }
+ł
+    private Span createStatusBadge(Test test) {
         String theme;
         String statusToolTipDesc = "Status: ";
-        switch (status) {
+        switch (test.getStatus()) {
             case "todo":
                 theme = "badge primary";
                 statusToolTipDesc = statusToolTipDesc + "TODO - test nie został uruchomiony, dane z poprzedniego testu";
@@ -216,10 +232,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 statusToolTipDesc = statusToolTipDesc + "test jest w trakcie wykonywania...";
                 break;
         }
-        Span badge = new Span(status.toUpperCase());
+        Span badge = new Span(test.getStatus().toUpperCase());
         badge.getStyle().set("width", "80px");
         badge.getElement().getThemeList().add(theme);
         badge.getElement().setProperty("title", statusToolTipDesc);
+        createImagePng(test);
         return badge;
     }
 
@@ -352,5 +369,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        broadcasterRegistration.remove();
+        broadcasterRegistration = null;
     }
 }

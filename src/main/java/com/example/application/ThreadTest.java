@@ -1,6 +1,8 @@
 package com.example.application;
 
 import com.example.application.model.Test;
+import com.example.application.tests.InvoicesDownloadTest;
+
 
 public class ThreadTest extends Thread {
 
@@ -11,28 +13,37 @@ public class ThreadTest extends Thread {
     }
 
     public void run() {
+        InvoicesDownloadTest invoicesDownloadTest = new InvoicesDownloadTest();
         System.out.println("Uruchomiono test:" + this.test.getName());
         this.test.setStatus("progress");
-        messageAndSleep(5);
+        switch (test.getName().toLowerCase()) {
+            case "pko": {
+                invoicesDownloadTest.pko();
+                break;
+            }
+            case "leaselink":{
+                invoicesDownloadTest.leaseLink();
+                break;
+            }
+            case "microsoft":{
+                invoicesDownloadTest.microsoft();
+                break;
+            }
+            case "t-mobile":{
+                invoicesDownloadTest.tMobile();
+                break;
+            }
+            case "toyota":{
+                invoicesDownloadTest.toyota();
+                break;
+            }
+            case "fakturownia":{
+                invoicesDownloadTest.fakturownia();
+                break;
+            }
+        }
         System.out.println("Zakończono test: " + this.test.getName());
         this.test.setStatus("pass");
-    }
-
-    /**
-     * Metoda wprowadza opóźnienie określone w <i>sleep</i> wcześniej informując o tym poprzez <i>message</i>
-     *
-     * @param sleepTimeInSec czas oczekiwania wyrażony w sek.
-     * @param message        komunikaty pojawiające się przed wejściem w czekanie w osobnej linijce
-     */
-    public static void messageAndSleep(Integer sleepTimeInSec, String... message) {
-        try {
-            if (message.length >= 1) {
-                for (String s : message) System.out.println(s);
-            }
-            Thread.sleep(sleepTimeInSec * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
 

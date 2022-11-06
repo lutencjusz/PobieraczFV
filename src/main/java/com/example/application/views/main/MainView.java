@@ -210,7 +210,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie");
         return imagePng;
     }
-ł
+
     private Span createStatusBadge(Test test) {
         String theme;
         String statusToolTipDesc = "Status: ";

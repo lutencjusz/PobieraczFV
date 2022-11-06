@@ -32,7 +32,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
 
@@ -87,9 +86,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid = new Grid<>(Test.class, false);
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.setItems(inMemoRep.getTests());
-        grid.addSelectionListener(selection -> {
-            System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size());
-        });
+        grid.addSelectionListener(selection -> System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size()));
 
         grid.addComponentColumn(this::createStatusBadge).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
         grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true)
@@ -100,7 +97,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .setSortable(true).setHeader("Estymowana data dostarczenia")
                 .setKey("date")
                 .getElement().setProperty("title", "Ostatnia data pobrania FV");
-        ;
         grid.addComponentColumn(this::createImagePng).setKey("screenshot").setHeader("Screeny");
         grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid)).setHeader("Akcje");
 
@@ -340,30 +336,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             notification.setPosition(Notification.Position.TOP_CENTER);
             notification.setOpened(true);
             notification.setVisible(true);
-            notification.addOpenedChangeListener(not -> {
-                refreshItems();
-            });
+            notification.addOpenedChangeListener(not -> refreshItems());
             ThreadTest testThread = new ThreadTest(test);
             Thread thread = new Thread(testThread);
             thread.start();
             refreshItems();
-        }
-    }
-
-    /**
-     * Metoda wprowadza opóźnienie określone w <i>sleep</i> wcześniej informując o tym poprzez <i>message</i>
-     *
-     * @param sleep   czas oczekiwania wyrażony w sek.
-     * @param message komunikaty pojawiające się przed wejściem w czekanie w osobnej linijce
-     */
-    public static void messageAndSleep(Integer sleep, String... message) {
-        try {
-            if (message.length >= 1) {
-                for (String s : message) System.out.println(s);
-            }
-            Thread.sleep(sleep * 1000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 

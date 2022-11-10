@@ -46,8 +46,11 @@ public class InMemoRep {
 
     public void setStatus(String name, String newStatus) {
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
-        test.ifPresent(value -> value.setStatus(newStatus));
-
+        if (test.isPresent()){
+            test.get().setStatus(newStatus);
+        } else {
+            System.out.println("Nie zaktualizowałem statusu");
+        }
     }
 
     public void updateTestData(String name, String nrFv, String dropboxLink, String status) {

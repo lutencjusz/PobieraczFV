@@ -43,7 +43,6 @@ public class ThreadTest extends Thread {
             }
         }
         System.out.println("Zakończono test: " + this.test.getName());
-        this.test.setStatus("pass");
     }
 }
 

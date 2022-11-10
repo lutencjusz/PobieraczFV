@@ -20,7 +20,7 @@ public class CryptoText {
 
     //    private static SecretKey keyAes = null;
     private static SecretKey keyDes = null;
-    private static final String pathStr = "src/test/resources/.env";
+    private static final String pathStr = "src/main/resources/.env";
     private static final Dotenv dotenv = Dotenv.configure()
             .directory(pathStr)
             .ignoreIfMalformed()

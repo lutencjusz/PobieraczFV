@@ -61,7 +61,7 @@ public class InvoicesDownloadTest extends TestFixtures {
     InMemoRep inMemoRep = new InMemoRep();
     LocalDate today = LocalDate.now();
     private static final Dotenv dotenv = Dotenv.configure()
-            .directory("src/test/resources/.env")
+            .directory("src/main/resources/.env")
             .ignoreIfMalformed()
             .ignoreIfMissing()
             .load();
@@ -81,49 +81,67 @@ public class InvoicesDownloadTest extends TestFixtures {
 
     @Test
     public void fakturownia() {
+        String invoicesName = "";
+        boolean isFoundAnyInvoice = false;
+        launchBrowser();
+        createContextAndPage();
         Scanner scanner = new Scanner(System.in);
         screenshotName = "fakturownia.png";
-        page.navigate("https://fakturownia.pl/");
-        page.locator(locators.getLoginButtonLocator()).click();
-        assert fakturowaniaUserName != null;
-        page.locator(locators.getUserNameLocator()).fill(CryptoText.decodeDES(fakturowaniaUserName));
-        assert fakturowaniaPassword != null;
-        page.locator(locators.getPasswordLocator()).fill(CryptoText.decodeDES(fakturowaniaPassword));
-        page.locator(locators.getSubmitButtonLocator()).click();
-        assertEquals("https://sopim.fakturownia.pl/", page.url());
-        page.getByText("Przychody ").click();
-        page.locator(locators.getMenuItemInvoicesLocator()).first().click();
-        page.locator(locators.getTotalSumLocator()).waitFor();
-        Locator rowLocator = page.locator(locators.getInvoicesColumnTableLocators());
-        List<String> invoicesNumbers = rowLocator.allTextContents();
-        int month = today.getMonth().getValue();
-        int year = today.getYear();
-        System.out.println("Podaj miesiąc wystawienia FV (" + month + "):");
-        String monthString = scanner.nextLine();
-        if (!monthString.isEmpty()) {
-            month = Integer.parseInt(monthString);
-        }
-        System.out.println("Wybrałeś miesiąc: " + month);
-        System.out.println("Podaj rok wystawienia FV (" + year + "):");
-        String yearString = scanner.nextLine();
-        if (!yearString.isEmpty()) {
-            year = Integer.parseInt(yearString);
-        }
-        System.out.println("Wybrałeś rok: " + year);
-        for (String nr : invoicesNumbers) {
-            int monthSubStr = Integer.parseInt(nr.substring(7, 9));
-            int yearSubStr = Integer.parseInt(nr.substring(2, 6));
-            if (monthSubStr == month && yearSubStr == year) {
-                System.out.println("Pobieram FV nr: " + nr);
-                page.locator(String.format(locators.getCogIconLocator(), nr)).last().click();
-                Download download = page.waitForDownload(() -> page.locator(String.format(locators.getDownloadLocator(), nr)).click());
-                fileName = "Fakturownia_" + year + "-" + month + "-" + nr.substring(10) + ".pdf";
-                download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
-                download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
-                System.out.println("Pobieram pliki do scieżki: " + fileName);
+        try {
+            page.navigate("https://fakturownia.pl/");
+            page.locator(locators.getLoginButtonLocator()).click();
+            assert fakturowaniaUserName != null;
+            page.locator(locators.getUserNameLocator()).fill(CryptoText.decodeDES(fakturowaniaUserName));
+            assert fakturowaniaPassword != null;
+            page.locator(locators.getPasswordLocator()).fill(CryptoText.decodeDES(fakturowaniaPassword));
+            page.locator(locators.getSubmitButtonLocator()).click();
+            assertEquals("https://sopim.fakturownia.pl/", page.url());
+            page.getByText("Przychody ").click();
+            page.locator(locators.getMenuItemInvoicesLocator()).first().click();
+            page.locator(locators.getTotalSumLocator()).waitFor();
+            Locator rowLocator = page.locator(locators.getInvoicesColumnTableLocators());
+            List<String> invoicesNumbers = rowLocator.allTextContents();
+            int month = today.getMonth().getValue();
+            int year = today.getYear();
+            System.out.println("Podaj miesiąc wystawienia FV (" + month + "):");
+            String monthString = scanner.nextLine();
+            if (!monthString.isEmpty()) {
+                month = Integer.parseInt(monthString);
             }
+            System.out.println("Wybrałeś miesiąc: " + month);
+            System.out.println("Podaj rok wystawienia FV (" + year + "):");
+            String yearString = scanner.nextLine();
+            if (!yearString.isEmpty()) {
+                year = Integer.parseInt(yearString);
+            }
+            System.out.println("Wybrałeś rok: " + year);
+
+            for (String nr : invoicesNumbers) {
+                int monthSubStr = Integer.parseInt(nr.substring(7, 9));
+                int yearSubStr = Integer.parseInt(nr.substring(2, 6));
+                if (monthSubStr == month && yearSubStr == year) {
+                    System.out.println("Pobieram FV nr: " + nr);
+                    page.locator(String.format(locators.getCogIconLocator(), nr)).last().click();
+                    Download download = page.waitForDownload(() -> page.locator(String.format(locators.getDownloadLocator(), nr)).click());
+                    fileName = "Fakturownia_FV" + year + "-" + month + "-" + nr.substring(10)+".pdf";
+                    download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
+                    download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
+                    System.out.println("Pobieram pliki do scieżki: " + fileName);
+                    invoicesName += isFoundAnyInvoice ? invoicesName + ", " + fileName : fileName;
+                    isFoundAnyInvoice = true;
+                }
+            }
+            if (!isFoundAnyInvoice) {
+                throw new Exception("invoices not found");
+            } else {
+                inMemoRep.updateTestData("Fakturownia", invoicesName, PATH_TO_DROPBOX + fileName, "pass");
+            }
+        } catch (Exception e) {
+            inMemoRep.setStatus("Fakturownia", "fail");
         }
-        Broadcaster.broadcast("LeaseLink");
+        closeContext();
+        closeBrowser();
+        Broadcaster.broadcast("Fakturownia");
     }
 
     public void pko() {
@@ -186,7 +204,7 @@ public class InvoicesDownloadTest extends TestFixtures {
     public void tMobile() {
         launchBrowser();
         createContextAndPage();
-        screenshotName = "tMobile.png";
+        screenshotName = "t-mobile.png";
         Scanner scanner = new Scanner(System.in);
         page.navigate("https://nowymoj.t-mobile.pl/");
         if (page.locator("//button/span[text()='Accept all']").isVisible()) {
@@ -211,7 +229,7 @@ public class InvoicesDownloadTest extends TestFixtures {
         Locator menuItem = page.locator("//li//span[contains(text(),'Płatności i faktury')]");
         menuItem.waitFor();
         menuItem.click();
-        page.locator("//a[contains(@class,'secondary-button-black-md') and text()='Zobacz faktury']").click();
+        page.locator("//a[text()='zapłacone rachunki']").click();
         Locator InvoiceNumber = page.locator("//li[1]//li[1]//div[@class='label']/span[2]");
         InvoiceNumber.waitFor();
         String invoiceName = InvoiceNumber.innerText();
@@ -230,7 +248,7 @@ public class InvoicesDownloadTest extends TestFixtures {
     public void leaseLink() {
         launchBrowser();
         createContextAndPage();
-        screenshotName = "leaseLink.png";
+        screenshotName = "leaselink.png";
         Scanner scanner = new Scanner(System.in);
         page.navigate("https://portal.leaselink.pl/");
         assert laseLinkPhone != null;
@@ -273,8 +291,15 @@ public class InvoicesDownloadTest extends TestFixtures {
         Locator staySignedIn = page.locator("id=idSIButton9");
         staySignedIn.waitFor();
         staySignedIn.click(new Locator.ClickOptions().setDelay(STANDARD_DELAY_IN_MIN_SEC));
-        staySignedIn.waitFor();
+        Locator moreInfo = page.locator("//a[contains(text(), 'Skip for now')]");
+        moreInfo.waitFor(new Locator.WaitForOptions().setTimeout(5000));
+        if (moreInfo.isVisible()) {
+            moreInfo.click();
+        }
         staySignedIn.click(new Locator.ClickOptions().setDelay(STANDARD_DELAY_IN_MIN_SEC));
+        if (page.locator("id=btnEnableSecurityDefaults").isVisible(new Locator.IsVisibleOptions().setTimeout(5000))) {
+            page.locator("id=btnEnableSecurityDefaults").click();
+        }
         Locator viewport = page.locator("//div[@data-automation-id='ListInvoiceList']");
         viewport.waitFor();
         Locator InvoiceNumber = page.locator("//div[@data-list-index='0']//div[@aria-colindex='2']/span");

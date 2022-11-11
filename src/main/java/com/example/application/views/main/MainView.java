@@ -197,10 +197,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         if (test.getStatus().equals("pass")) {
             linkScreen = "/png/" + test.getName().toLowerCase() + ".png";
         } else {
-            linkScreen = "icon.png";
+            linkScreen = "Brak_obrazka.png";
         }
         imagePng = new Image(linkScreen, "screen shot");
-        imagePng.setWidth("70px");
+        imagePng.setWidth("50px");
         imagePng.setHeight("50px");
         imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
         imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie");

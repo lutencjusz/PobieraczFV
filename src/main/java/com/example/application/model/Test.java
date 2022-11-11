@@ -1,6 +1,5 @@
 package com.example.application.model;
 
-import com.vaadin.flow.component.button.Button;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,9 +15,9 @@ public class Test {
     private String nrFv;
     private String dropboxLink;
     private LocalDate estimatedDeliveryDate;
-    private String status;
+    private TestStatus status;
     private boolean isInteractionNeed;
-    public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, String status, boolean isInteractionNeed) {
+    public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, TestStatus status, boolean isInteractionNeed) {
         this.id = counter++;
         this.name = name;
         this.url = url;

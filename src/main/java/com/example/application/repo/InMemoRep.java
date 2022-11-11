@@ -1,6 +1,7 @@
 package com.example.application.repo;
 
 import com.example.application.model.Test;
+import com.example.application.model.TestStatus;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Repository;
@@ -19,12 +20,12 @@ public class InMemoRep {
 
     @PostConstruct
     public void initData() {
-        tests.add(new Test("LeaseLink", "link1", "...", "...", LocalDate.now(), "todo", true));
-        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDate.now(), "todo", false));
-        tests.add(new Test("PKO", "link1", "...", "...", LocalDate.now(), "todo", false));
-        tests.add(new Test("T-Mobile", "link1", "...", "...", LocalDate.now(), "todo", true));
-        tests.add(new Test("Toyota", "link1", "...", "...", LocalDate.now(), "todo", false));
-        tests.add(new Test("Fakturownia", "link1", "...", "...", LocalDate.now(), "todo", true));
+        tests.add(new Test("LeaseLink", "link1", "...", "...", LocalDate.now(), TestStatus.todo, true));
+        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false));
+        tests.add(new Test("PKO", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false));
+        tests.add(new Test("T-Mobile", "link1", "...", "...", LocalDate.now(), TestStatus.todo, true));
+        tests.add(new Test("Toyota", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false));
+        tests.add(new Test("Fakturownia", "link1", "...", "...", LocalDate.now(), TestStatus.todo, true));
     }
 
     public List<Test> getTests() {
@@ -39,12 +40,7 @@ public class InMemoRep {
         tests.add(test);
     }
 
-    public Test getTest(int id) {
-        Optional<Test> test = tests.stream().filter(item -> item.getId() == id).findFirst();
-        return test.get();
-    }
-
-    public void setStatus(String name, String newStatus) {
+    public void setStatus(String name, TestStatus newStatus) {
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
         if (test.isPresent()){
             test.get().setStatus(newStatus);
@@ -53,7 +49,7 @@ public class InMemoRep {
         }
     }
 
-    public void updateTestData(String name, String nrFv, String dropboxLink, String status) {
+    public void updateTestData(String name, String nrFv, String dropboxLink, TestStatus status) {
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
         if (test.isPresent()) {
             test.get().setNrFv(nrFv);

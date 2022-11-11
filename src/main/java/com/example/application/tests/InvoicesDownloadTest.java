@@ -1,6 +1,7 @@
 package com.example.application.tests;
 
 import com.example.application.Locators;
+import com.example.application.model.TestStatus;
 import com.example.application.repo.InMemoRep;
 import com.example.application.utils.Broadcaster;
 import com.example.application.utils.CryptoText;
@@ -121,10 +122,10 @@ public class InvoicesDownloadTest extends TestFixtures {
             if (!isFoundAnyInvoice) {
                 throw new Exception("invoices not found");
             } else {
-                inMemoRep.updateTestData("Fakturownia", invoicesName, PATH_TO_DROPBOX + fileName, "pass");
+                inMemoRep.updateTestData("Fakturownia", invoicesName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
             }
         } catch (Exception e) {
-            inMemoRep.setStatus("Fakturownia", "fail");
+            inMemoRep.setStatus("Fakturownia", TestStatus.fail);
         }
         closeContext();
         closeBrowser();
@@ -153,13 +154,13 @@ public class InvoicesDownloadTest extends TestFixtures {
             download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
             System.out.println("Pobrano plik: " + fileName);
         } catch (Exception e) {
-            inMemoRep.setStatus("PKO", "fail");
+            inMemoRep.setStatus("PKO", TestStatus.fail);
             Broadcaster.broadcast("PKO");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("PKO", invoiceName, PATH_TO_DROPBOX + fileName, "pass");
+        inMemoRep.updateTestData("PKO", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
         Broadcaster.broadcast("PKO");
     }
 
@@ -191,13 +192,13 @@ public class InvoicesDownloadTest extends TestFixtures {
             download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
             System.out.println("Pobrano plik: " + fileName);
         } catch (Exception e) {
-            inMemoRep.setStatus("Toyota", "fail");
+            inMemoRep.setStatus("Toyota", TestStatus.fail);
             Broadcaster.broadcast("Toyota");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("Toyota", invoiceName, PATH_TO_DROPBOX + fileName, "pass");
+        inMemoRep.updateTestData("Toyota", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
         Broadcaster.broadcast("Toyota");
     }
 
@@ -242,13 +243,13 @@ public class InvoicesDownloadTest extends TestFixtures {
             download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
             System.out.println("Pobrano plik: " + fileName);
         } catch (Exception e) {
-            inMemoRep.setStatus("T-Mobile", "fail");
+            inMemoRep.setStatus("T-Mobile", TestStatus.fail);
             Broadcaster.broadcast("T-Mobile");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("T-Mobile", invoiceName, PATH_TO_DROPBOX + fileName, "pass");
+        inMemoRep.updateTestData("T-Mobile", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
         Broadcaster.broadcast("T-Mobile");
     }
 
@@ -281,7 +282,7 @@ public class InvoicesDownloadTest extends TestFixtures {
         System.out.println("Pobrano plik: " + fileName);
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("LeaseLink", invoiceName, PATH_TO_DROPBOX + fileName, "pass");
+        inMemoRep.updateTestData("LeaseLink", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
         Broadcaster.broadcast("LeaseLink");
     }
 
@@ -321,7 +322,7 @@ public class InvoicesDownloadTest extends TestFixtures {
         System.out.println("Pobrano plik: " + fileName);
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("Microsoft", invoiceName, PATH_TO_DROPBOX + fileName, "pass");
+        inMemoRep.updateTestData("Microsoft", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
         Broadcaster.broadcast("Microsoft");
     }
 }

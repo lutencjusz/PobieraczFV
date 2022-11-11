@@ -2,6 +2,7 @@ package com.example.application.views.main;
 
 import com.example.application.ThreadTest;
 import com.example.application.model.Test;
+import com.example.application.model.TestStatus;
 import com.example.application.repo.InMemoRep;
 import com.example.application.utils.Broadcaster;
 import com.vaadin.flow.component.*;
@@ -203,7 +204,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     public Image createImagePng(Test test) {
 
-        String linkScreen = test.getStatus().equals("pass") ? "/png/" + test.getName().toLowerCase() + ".png" : "Brak_obrazka.png";
+        String linkScreen = test.getStatus().equals(TestStatus.pass) ? "/png/" + test.getName().toLowerCase() + ".png" : "Brak_obrazka.png";
 
         imagePng = new Image(linkScreen, "screen shot");
         imagePng.setWidth("50px");
@@ -216,7 +217,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private Span createStatusBadge(Test test) {
         String theme;
         String statusToolTipDesc = "Status: ";
-        switch (test.getStatus()) {
+        switch (test.getStatus().toString()) {
             case "todo":
                 theme = "badge primary";
                 statusToolTipDesc += "TODO - test nie został uruchomiony, dane z poprzedniego testu";
@@ -234,7 +235,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 statusToolTipDesc += "test jest w trakcie wykonywania...";
                 break;
         }
-        Span badge = new Span(test.getStatus().toUpperCase());
+        Span badge = new Span(test.getStatus().toString().toUpperCase());
         badge.getStyle().set("width", "80px");
         badge.getElement().getThemeList().add(theme);
         badge.getElement().setProperty("title", statusToolTipDesc);
@@ -262,7 +263,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         Button addBtn = new Button("Dodaj");
         addBtn.addClickListener(buttonClickEvent -> {
-            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), "todo", isInteractionNeed.getValue()));
+            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), TestStatus.todo, isInteractionNeed.getValue()));
             addTestDialog.close();
             refreshItems();
         });
@@ -316,13 +317,13 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
         testButton.getElement().setProperty("title", "Uruchomienie testu tylko dla serwisu " + test.getName());
         testButton.setIcon(new Icon(VaadinIcon.PLAY_CIRCLE));
-        testButton.setEnabled(!test.getStatus().equals("progress"));
+        testButton.setEnabled(!test.getStatus().equals(TestStatus.progress));
 
         /* link poglądu FV*/
         String linkScreen = "/fv/" + test.getName() + "_" + test.getNrFv().replace("/", "-").trim() + ".pdf";
         Anchor downloadPdf = new Anchor(linkScreen);
         downloadPdf.setTarget("_blank");
-        downloadPdf.setEnabled(test.getStatus().equals("pass"));
+        downloadPdf.setEnabled(test.getStatus().equals(TestStatus.pass));
 
         Button downloadPdfButton = new Button();
         downloadPdfButton.addThemeVariants(ButtonVariant.LUMO_ICON,

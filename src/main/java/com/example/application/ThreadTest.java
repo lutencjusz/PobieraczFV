@@ -1,6 +1,7 @@
 package com.example.application;
 
 import com.example.application.model.Test;
+import com.example.application.model.TestStatus;
 import com.example.application.tests.InvoicesDownloadTest;
 
 import java.time.LocalDate;
@@ -18,7 +19,7 @@ public class ThreadTest extends Thread {
     public void run() {
         InvoicesDownloadTest invoicesDownloadTest = new InvoicesDownloadTest();
         System.out.println("Uruchomiono test:" + this.test.getName());
-        this.test.setStatus("progress");
+        this.test.setStatus(TestStatus.progress);
         switch (test.getName().toLowerCase()) {
             case "pko": {
                 invoicesDownloadTest.pko();

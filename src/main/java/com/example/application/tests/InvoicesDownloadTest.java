@@ -79,13 +79,11 @@ public class InvoicesDownloadTest extends TestFixtures {
     private final String PATH_TO_DROPBOX = dotenv.get("PATH_TO_DROPBOX") + today.toString().substring(0, 7) + "\\";
     private final String PATH_TO_RAPORT = dotenv.get("PATH_TO_RAPORT");
 
-    @Test
-    public void fakturownia() {
+    public void fakturownia(LocalDate date) {
         String invoicesName = "";
         boolean isFoundAnyInvoice = false;
         launchBrowser();
         createContextAndPage();
-        Scanner scanner = new Scanner(System.in);
         screenshotName = "fakturownia.png";
         try {
             page.navigate("https://fakturownia.pl/");
@@ -101,21 +99,10 @@ public class InvoicesDownloadTest extends TestFixtures {
             page.locator(locators.getFakturowniaTotalSumLocator()).waitFor();
             Locator rowLocator = page.locator(locators.getFakturowniaInvoicesColumnTableLocators());
             List<String> invoicesNumbers = rowLocator.allTextContents();
-            int month = today.getMonth().getValue();
-            int year = today.getYear();
-            System.out.println("Podaj miesiąc wystawienia FV (" + month + "):");
-            String monthString = scanner.nextLine();
-            if (!monthString.isEmpty()) {
-                month = Integer.parseInt(monthString);
-            }
+            int month = date.getMonthValue();
             System.out.println("Wybrałeś miesiąc: " + month);
-            System.out.println("Podaj rok wystawienia FV (" + year + "):");
-            String yearString = scanner.nextLine();
-            if (!yearString.isEmpty()) {
-                year = Integer.parseInt(yearString);
-            }
+            int year = date.getYear();
             System.out.println("Wybrałeś rok: " + year);
-
             for (String nr : invoicesNumbers) {
                 int monthSubStr = Integer.parseInt(nr.substring(7, 9));
                 int yearSubStr = Integer.parseInt(nr.substring(2, 6));
@@ -145,7 +132,7 @@ public class InvoicesDownloadTest extends TestFixtures {
     }
 
     public void pko() {
-        String invoiceName = "";
+        String invoiceName;
         launchBrowser();
         createContextAndPage();
         try {
@@ -161,7 +148,7 @@ public class InvoicesDownloadTest extends TestFixtures {
             Download download = page.waitForDownload(() -> page.click(locators.getPkoDownloadButtonLocator()));
             invoiceName = page.innerText(locators.getPkoInvoiceNameTextLocator());
             fileName = "PKO_" + invoiceName.replace("/", "-");
-            fileName = fileName.substring(0, fileName.length() - 1) + ".pdf";
+            fileName = fileName.substring(0, fileName.length() - 1).trim() + ".pdf";
             download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
             download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
             System.out.println("Pobrano plik: " + fileName);
@@ -181,7 +168,7 @@ public class InvoicesDownloadTest extends TestFixtures {
         launchBrowser();
         createContextAndPage();
         screenshotName = "toyota.png";
-        String invoiceName = null;
+        String invoiceName;
         try {
             page.navigate("https://portal.toyotaleasing.pl/Login");
             if (page.locator(locators.getToyotaCookiesButtonLocator()).isVisible()) {
@@ -220,38 +207,45 @@ public class InvoicesDownloadTest extends TestFixtures {
         createContextAndPage();
         screenshotName = "t-mobile.png";
         Scanner scanner = new Scanner(System.in);
-        page.navigate("https://nowymoj.t-mobile.pl/");
-        if (page.locator("//button/span[text()='Accept all']").isVisible()) {
-            page.locator("//button/span[text()='Accept all']").click();
-        }
-        if (page.locator("//button[contains(text(),'Ok')]").isVisible()) {
-            page.locator("//button[contains(text(),'Ok')]").click();
-        }
-        assert tMobileUserName != null;
-        page.locator("id=email").fill(CryptoText.decodeDES(tMobileUserName));
-        page.locator("//button[text()='Dalej']").click();
-        assert tMobilePassword != null;
-        page.locator("id=password").fill(CryptoText.decodeDES(tMobilePassword));
-        page.locator("//input[@value='Zaloguj się']").click();
+        String invoiceName;
+        try {
+            page.navigate("https://nowymoj.t-mobile.pl/");
+            if (page.isVisible(locators.getTMobileCookiesButtonLocator())) {
+                page.click(locators.getTMobileCookiesButtonLocator());
+            }
+            if (page.isVisible(locators.getTMobileOkButtonLocator())) {
+                page.click(locators.getTMobileOkButtonLocator());
+            }
+            assert tMobileUserName != null;
+            page.fill(locators.getTMobileEmailLocator(), CryptoText.decodeDES(tMobileUserName));
+            page.click(locators.getTMobileNextButtonLocator());
+            assert tMobilePassword != null;
+            page.fill(locators.getTMobilePasswordLocator(), CryptoText.decodeDES(tMobilePassword));
+            page.click(locators.getTMobileSubmitButtonLocator());
 
-        System.out.println("Podaj kod otrzymany SMS'em od T-mobile: ");
-        String SmsCode = scanner.nextLine();
+            System.out.println("Podaj kod otrzymany SMS'em od T-mobile: ");
+            String SmsCode = scanner.nextLine();
 
-        page.locator("//input[@id='otpInput']").type(SmsCode);
-        page.locator("//input[@id='submit1']").click();
-        page.locator("//button[contains(text(),'Ok')]").click();
-        Locator menuItem = page.locator("//li//span[contains(text(),'Płatności i faktury')]");
-        menuItem.waitFor();
-        menuItem.click();
-        page.locator("//a[text()='zapłacone rachunki']").click();
-        Locator InvoiceNumber = page.locator("//li[1]//li[1]//div[@class='label']/span[2]");
-        InvoiceNumber.waitFor();
-        String invoiceName = InvoiceNumber.innerText();
-        fileName = "T-Mobile_" + invoiceName + ".pdf";
-        Download download = page.waitForDownload(() -> page.locator("//ul/li[1]//li[1]//a[contains(text(),'pobierz')]").click());
-        download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
-        download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
-        System.out.println("Pobrano plik: " + fileName);
+            page.type(locators.getTMobileSmsCodeTextLocator(), SmsCode);
+            page.click(locators.getTMobileSmsCodeButtonLocator());
+            page.click(locators.getTMobileOkButtonLocator());
+            Locator menuItem = page.locator(locators.getTMobileInvoicesAndPaymentsMenuLocator());
+            menuItem.waitFor();
+            menuItem.click();
+            page.click(locators.getTMobilePaidPaymentsLinkLocator());
+            Locator InvoiceNumber = page.locator(locators.getTMobileInvoiceNumberTextLocator());
+            InvoiceNumber.waitFor();
+            invoiceName = InvoiceNumber.innerText();
+            fileName = "T-Mobile_" + invoiceName + ".pdf";
+            Download download = page.waitForDownload(() -> page.locator(locators.getTMobileDownloadButtonLocator()).click());
+            download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
+            download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
+            System.out.println("Pobrano plik: " + fileName);
+        } catch (Exception e) {
+            inMemoRep.setStatus("T-Mobile", "fail");
+            Broadcaster.broadcast("T-Mobile");
+            return;
+        }
         closeContext();
         closeBrowser();
         inMemoRep.updateTestData("T-Mobile", invoiceName, PATH_TO_DROPBOX + fileName, "pass");

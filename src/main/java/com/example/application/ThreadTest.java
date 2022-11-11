@@ -3,13 +3,16 @@ package com.example.application;
 import com.example.application.model.Test;
 import com.example.application.tests.InvoicesDownloadTest;
 
+import java.time.LocalDate;
 
 public class ThreadTest extends Thread {
 
     private final Test test;
+    private final LocalDate date;
 
-    public ThreadTest(Test test) {
+    public ThreadTest(Test test, LocalDate date) {
         this.test = test;
+        this.date = date;
     }
 
     public void run() {
@@ -38,7 +41,7 @@ public class ThreadTest extends Thread {
                 break;
             }
             case "fakturownia":{
-                invoicesDownloadTest.fakturownia();
+                invoicesDownloadTest.fakturownia(date);
                 break;
             }
         }

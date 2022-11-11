@@ -19,12 +19,12 @@ public class InMemoRep {
 
     @PostConstruct
     public void initData() {
-        tests.add(new Test("LeaseLink", "link1", "15911/10/2022UL", "dropboxLink", LocalDate.now(), "todo"));
-        tests.add(new Test("Microsoft", "link1", "E0400KHCU0", "dropboxLink", LocalDate.now(), "todo"));
-        tests.add(new Test("PKO", "link1", "LM/22/10/110018", "dropboxLink", LocalDate.now(), "todo"));
-        tests.add(new Test("T-Mobile", "link1", "503438161022", "dropboxLink", LocalDate.now(), "todo"));
-        tests.add(new Test("Toyota", "link1", "14978/10/2022/SP", "dropboxLink", LocalDate.now(), "todo"));
-        tests.add(new Test("Fakturownia", "link1", "FV2022/10/1", "dropboxLink", LocalDate.now(), "todo"));
+        tests.add(new Test("LeaseLink", "link1", "...", "...", LocalDate.now(), "todo", true));
+        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDate.now(), "todo", false));
+        tests.add(new Test("PKO", "link1", "...", "...", LocalDate.now(), "todo", false));
+        tests.add(new Test("T-Mobile", "link1", "...", "...", LocalDate.now(), "todo", true));
+        tests.add(new Test("Toyota", "link1", "...", "...", LocalDate.now(), "todo", false));
+        tests.add(new Test("Fakturownia", "link1", "...", "...", LocalDate.now(), "todo", true));
     }
 
     public List<Test> getTests() {
@@ -49,7 +49,7 @@ public class InMemoRep {
         if (test.isPresent()){
             test.get().setStatus(newStatus);
         } else {
-            System.out.println("Nie zaktualizowałem statusu");
+            System.out.println("Nie odświeżyłem statusu");
         }
     }
 
@@ -61,7 +61,7 @@ public class InMemoRep {
             test.get().setEstimatedDeliveryDate(LocalDate.now());
             test.get().setStatus(status);
         } else {
-            System.out.println("Nie zaktualizaowałem danych");
+            System.out.println("Nie odświeżyłem danych");
         }
     }
 }

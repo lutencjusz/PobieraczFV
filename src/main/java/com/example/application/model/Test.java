@@ -17,8 +17,8 @@ public class Test {
     private String dropboxLink;
     private LocalDate estimatedDeliveryDate;
     private String status;
-    private Button progress;
-    public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, String status) {
+    private boolean isInteractionNeed;
+    public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, String status, boolean isInteractionNeed) {
         this.id = counter++;
         this.name = name;
         this.url = url;
@@ -26,6 +26,6 @@ public class Test {
         this.status = status;
         this.nrFv = nrFv;
         this.dropboxLink = dropboxLink;
-        this.progress = null;
+        this.isInteractionNeed = isInteractionNeed;
     }
 }

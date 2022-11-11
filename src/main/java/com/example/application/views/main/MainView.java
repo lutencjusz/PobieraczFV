@@ -7,6 +7,7 @@ import com.example.application.utils.Broadcaster;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -24,7 +25,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -34,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
+import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.START;
 
 
 @PageTitle("Tests")
@@ -44,7 +49,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     Registration broadcasterRegistration;
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();
-
+    LocalDate date;
     Html servicesCounter;
 
     Image imagePng;
@@ -53,6 +58,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        date = LocalDate.now();
         servicesCounter = new Html("<b>Początkowa ilość serwisów: " + inMemoRep.getTests().size() + "</b>");
         super.onAttach(attachEvent);
         HorizontalLayout logo = new HorizontalLayout();
@@ -63,6 +69,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         DatePicker datePicker = new DatePicker("Wybierz datę wystawienia faktury:");
         datePicker.setId("dataPicker");
+        datePicker.setValue(date);
         DatePicker.DatePickerI18n polishI18nDatePicker = new DatePicker.DatePickerI18n();
         polishI18nDatePicker.setMonthNames(List.of("Styczeń", "Luty", "Marzec", "Kwiecień",
                 "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik",
@@ -76,6 +83,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         polishI18nDatePicker.setFirstDayOfWeek(1);
         datePicker.setI18n(polishI18nDatePicker);
         datePicker.getElement().setProperty("title", "Data wygenerowania FV, istotna przy pobieraniu z Fakturowni (rok i miesiąc)");
+        datePicker.addValueChangeListener(datePickerLocalDateComponentValueChangeEvent -> date = datePickerLocalDateComponentValueChangeEvent.getValue());
 
         logo.add(
                 image,
@@ -110,6 +118,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .setSortable(true);
         grid.getColumnByKey("link")
                 .setSortable(false);
+        grid.setHeight("500px");
 
         HorizontalLayout buttons = new HorizontalLayout();
         buttons.setPadding(false);
@@ -244,15 +253,16 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         TextField url = new TextField("Url");
         TextField nrFv = new TextField("Numer FV");
         TextField dropboxLink = new TextField("dropboxLink");
+        Checkbox isInteractionNeed = new Checkbox("Czy wymaga wymiany informacji");
 
-        addTestLayout.add(name, url, nrFv, dropboxLink);
+        addTestLayout.add(name, url, nrFv, dropboxLink, isInteractionNeed);
 
         Button cancelBtn = new Button("Anuluj");
         cancelBtn.addClickListener(buttonClickEvent -> addTestDialog.close());
 
         Button addBtn = new Button("Dodaj");
         addBtn.addClickListener(buttonClickEvent -> {
-            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), "todo"));
+            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), "todo", isInteractionNeed.getValue()));
             addTestDialog.close();
             refreshItems();
         });
@@ -306,6 +316,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         });
         testButton.getElement().setProperty("title", "Uruchomienie testu tylko dla serwisu " + test.getName());
         testButton.setIcon(new Icon(VaadinIcon.PLAY_CIRCLE));
+        testButton.setEnabled(!test.getStatus().equals("progress"));
 
         /* link poglądu FV*/
         String linkScreen = "/fv/" + test.getName() + "_" + test.getNrFv().replace("/", "-").trim() + ".pdf";
@@ -321,23 +332,34 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
         downloadPdf.add(downloadPdfButton);
 
+        /* Wskaźnik wymagania interakcji*/
+        Button interactionButton = new Button();
+        interactionButton.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.MATERIAL_CONTAINED, ButtonVariant.LUMO_TERTIARY);
+        interactionButton.setIcon(new Icon(VaadinIcon.EXCHANGE));
+        interactionButton.getElement().setProperty("title", "Serwis S" + test.getName() + " wymaga wprowadzenia danych przez konsolę");
+
         /* Dodanie przycisków do layoutu */
         horizontalLayout.add(downloadPdf, testButton, trashButton);
+        if (test.isInteractionNeed()) {
+            horizontalLayout.add(interactionButton);
+        }
+        horizontalLayout.setJustifyContentMode(START);
+        horizontalLayout.setSpacing(false);
         return horizontalLayout;
     }
 
     private void executionTests(Set<Test> tests) {
         for (Test test : tests) {
+            ThreadTest testThread = new ThreadTest(test, date);
+            testThread.start();
+            refreshItems();
             Notification notification = Notification.show("Uruchomiono test: " + test.getName());
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             notification.setPosition(Notification.Position.TOP_CENTER);
+            notification.addOpenedChangeListener(not -> refreshItems());
             notification.setOpened(true);
             notification.setVisible(true);
-            notification.addOpenedChangeListener(not -> refreshItems());
-            ThreadTest testThread = new ThreadTest(test);
-            Thread thread = new Thread(testThread);
-            thread.start();
-            refreshItems();
         }
     }
 

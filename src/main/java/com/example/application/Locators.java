@@ -27,5 +27,19 @@ public class Locators {
     final String toyotAllInvoicesButtonLocator = "//span[@class='dx-vam' and text()='Wszystkie faktury']";
     final String toyotInvoiceNumberTextLocator = "//tr[contains(@id,'DXDataRow0')]//td[2]";
     final String toyotDownloadButtonLocator = "//tr[contains(@id,'DXDataRow0')]//td/a[contains(@class,'fa-file-pdf')]";
+    // T-Mobile
+    final String tMobileCookiesButtonLocator = "//button/span[text()='Accept all']";
+    final String tMobileOkButtonLocator = "//button[contains(text(),'Ok')]";
+    final String tMobileEmailLocator = "id=email";
+    final String tMobileNextButtonLocator = "//button[text()='Dalej']";
+    final String tMobilePasswordLocator = "id=password";
+    final String tMobileSubmitButtonLocator = "//input[@value='Zaloguj się']";
+    final String tMobileSmsCodeTextLocator = "//input[@id='otpInput']";
+    final String tMobileSmsCodeButtonLocator = "//input[@id='submit1']";
+    final String tMobileInvoicesAndPaymentsMenuLocator = "//li//span[contains(text(),'Płatności i faktury')]";
+    final String tMobilePaidPaymentsLinkLocator = "//a[text()='zapłacone rachunki']";
+    final String tMobileInvoiceNumberTextLocator = "//li[1]//li[1]//div[@class='label']/span[2]";
+    final String tMobileDownloadButtonLocator = "//ul/li[1]//li[1]//a[contains(text(),'pobierz')]";
+
 
 }

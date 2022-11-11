@@ -89,17 +89,17 @@ public class InvoicesDownloadTest extends TestFixtures {
         screenshotName = "fakturownia.png";
         try {
             page.navigate("https://fakturownia.pl/");
-            page.locator(locators.getLoginButtonLocator()).click();
+            page.locator(locators.getFakturowniaLoginButtonLocator()).click();
             assert fakturowaniaUserName != null;
-            page.locator(locators.getUserNameLocator()).fill(CryptoText.decodeDES(fakturowaniaUserName));
+            page.locator(locators.getFakturowniaUserNameLocator()).fill(CryptoText.decodeDES(fakturowaniaUserName));
             assert fakturowaniaPassword != null;
-            page.locator(locators.getPasswordLocator()).fill(CryptoText.decodeDES(fakturowaniaPassword));
-            page.locator(locators.getSubmitButtonLocator()).click();
+            page.locator(locators.getFakturowniaPasswordLocator()).fill(CryptoText.decodeDES(fakturowaniaPassword));
+            page.locator(locators.getFakturowniaSubmitButtonLocator()).click();
             assertEquals("https://sopim.fakturownia.pl/", page.url());
             page.getByText("Przychody ").click();
-            page.locator(locators.getMenuItemInvoicesLocator()).first().click();
-            page.locator(locators.getTotalSumLocator()).waitFor();
-            Locator rowLocator = page.locator(locators.getInvoicesColumnTableLocators());
+            page.locator(locators.getFakturowniaMenuItemInvoicesLocator()).first().click();
+            page.locator(locators.getFakturowniaTotalSumLocator()).waitFor();
+            Locator rowLocator = page.locator(locators.getFakturowniaInvoicesColumnTableLocators());
             List<String> invoicesNumbers = rowLocator.allTextContents();
             int month = today.getMonth().getValue();
             int year = today.getYear();
@@ -121,9 +121,9 @@ public class InvoicesDownloadTest extends TestFixtures {
                 int yearSubStr = Integer.parseInt(nr.substring(2, 6));
                 if (monthSubStr == month && yearSubStr == year) {
                     System.out.println("Pobieram FV nr: " + nr);
-                    page.locator(String.format(locators.getCogIconLocator(), nr)).last().click();
-                    Download download = page.waitForDownload(() -> page.locator(String.format(locators.getDownloadLocator(), nr)).click());
-                    fileName = "Fakturownia_FV" + year + "-" + month + "-" + nr.substring(10)+".pdf";
+                    page.locator(String.format(locators.getFakturowniaCogIconLocator(), nr)).last().click();
+                    Download download = page.waitForDownload(() -> page.locator(String.format(locators.getFakturowniaDownloadLocator(), nr)).click());
+                    fileName = "Fakturownia_FV" + year + "-" + month + "-" + nr.substring(10) + ".pdf";
                     download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
                     download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
                     System.out.println("Pobieram pliki do scieżki: " + fileName);
@@ -145,24 +145,31 @@ public class InvoicesDownloadTest extends TestFixtures {
     }
 
     public void pko() {
+        String invoiceName = "";
         launchBrowser();
         createContextAndPage();
-        screenshotName = "pko.png";
-        page.navigate("https://portal.pkoleasing.pl/Common/Authentication/Login");
-        assert pkoUserName != null;
-        page.locator("id=Login").fill(CryptoText.decodeDES(pkoUserName));
-        assert pkoPassword != null;
-        page.locator("id=Password").fill(CryptoText.decodeDES(pkoPassword));
-        page.locator("id=Password").press("Enter");
-        Locator invoices = page.getByText("Faktury").first();
-        invoices.waitFor();
-        Download download = page.waitForDownload(() -> page.locator("//tr[1]//td[3]//span[contains(@class,'pko-icon-pobierz_PDF')]").click());
-        String invoiceName = page.locator("//tr[1]//td[1]//a").innerText();
-        fileName = "PKO_" + invoiceName.replace("/", "-");
-        fileName = fileName.substring(0, fileName.length() - 1) + ".pdf";
-        download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
-        download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
-        System.out.println("Pobrano plik: " + fileName);
+        try {
+            screenshotName = "pko.png";
+            page.navigate("https://portal.pkoleasing.pl/Common/Authentication/Login");
+            assert pkoUserName != null;
+            page.locator(locators.getPkoLoginButtonLocator()).fill(CryptoText.decodeDES(pkoUserName));
+            assert pkoPassword != null;
+            page.locator(locators.getPkoPasswordButtonLocator()).fill(CryptoText.decodeDES(pkoPassword));
+            page.locator(locators.getPkoPasswordButtonLocator()).press("Enter");
+            Locator invoices = page.getByText("Faktury").first();
+            invoices.waitFor();
+            Download download = page.waitForDownload(() -> page.locator(locators.getPkoDownloadButtonLocator()).click());
+            invoiceName = page.locator(locators.getPkoInvoiceNameTextLocator()).innerText();
+            fileName = "PKO_" + invoiceName.replace("/", "-");
+            fileName = fileName.substring(0, fileName.length() - 1) + ".pdf";
+            download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
+            download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
+            System.out.println("Pobrano plik: " + fileName);
+        } catch (Exception e) {
+            inMemoRep.setStatus("PKO", "fail");
+            Broadcaster.broadcast("PKO");
+            return;
+        }
         closeContext();
         closeBrowser();
         inMemoRep.updateTestData("PKO", invoiceName, PATH_TO_DROPBOX + fileName, "pass");
@@ -174,26 +181,33 @@ public class InvoicesDownloadTest extends TestFixtures {
         launchBrowser();
         createContextAndPage();
         screenshotName = "toyota.png";
-        page.navigate("https://portal.toyotaleasing.pl/Login");
-        if (page.locator("//span[text()='Akceptuję wszystkie']").isVisible()) {
-            page.locator("//span[text()='Akceptuję wszystkie']").click();
+        String invoiceName = null;
+        try {
+            page.navigate("https://portal.toyotaleasing.pl/Login");
+            if (page.locator(locators.getToyotaCookiesButtonLocator()).isVisible()) {
+                page.locator(locators.getToyotaCookiesButtonLocator()).click();
+            }
+            assert toyotaUserName != null;
+            page.locator(locators.getToyotaUserNameLocator()).fill(CryptoText.decodeDES(toyotaUserName));
+            assert toyotaPassword != null;
+            page.locator(locators.getToyotPasswordLocator()).fill(CryptoText.decodeDES(toyotaPassword));
+            page.locator(locators.getToyotSubmitButtonLocator()).click();
+            Locator allInvoicesButton = page.locator(locators.getToyotAllInvoicesButtonLocator());
+            allInvoicesButton.waitFor();
+            allInvoicesButton.click();
+            Locator InvoiceNumber = page.locator(locators.getToyotInvoiceNumberTextLocator());
+            InvoiceNumber.waitFor();
+            invoiceName = InvoiceNumber.innerText();
+            Download download = page.waitForDownload(() -> page.locator(locators.getToyotDownloadButtonLocator()).click());
+            fileName = "Toyota_" + invoiceName.replace("/", "-") + ".pdf";
+            download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
+            download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
+            System.out.println("Pobrano plik: " + fileName);
+        } catch (Exception e) {
+            inMemoRep.setStatus("Toyota", "fail");
+            Broadcaster.broadcast("Toyota");
+            return;
         }
-        assert toyotaUserName != null;
-        page.locator("id=login_layout_txtUName").fill(CryptoText.decodeDES(toyotaUserName));
-        assert toyotaPassword != null;
-        page.locator("id=login_layout_txtPName").fill(CryptoText.decodeDES(toyotaPassword));
-        page.locator("//span[@class='dx-vam' and text()='ZALOGUJ']").click();
-        Locator allInvoicesButton = page.locator("//span[@class='dx-vam' and text()='Wszystkie faktury']");
-        allInvoicesButton.waitFor();
-        allInvoicesButton.click();
-        Locator InvoiceNumber = page.locator("//tr[contains(@id,'DXDataRow0')]//td[2]");
-        InvoiceNumber.waitFor();
-        String invoiceName = InvoiceNumber.innerText();
-        Download download = page.waitForDownload(() -> page.locator("//tr[contains(@id,'DXDataRow0')]//td/a[contains(@class,'fa-file-pdf')]").click());
-        fileName = "Toyota_" + invoiceName.replace("/", "-") + ".pdf";
-        download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
-        download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
-        System.out.println("Pobrano plik: " + fileName);
         closeContext();
         closeBrowser();
         inMemoRep.updateTestData("Toyota", invoiceName, PATH_TO_DROPBOX + fileName, "pass");

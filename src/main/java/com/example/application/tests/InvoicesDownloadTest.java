@@ -261,22 +261,22 @@ public class InvoicesDownloadTest extends TestFixtures {
         Scanner scanner = new Scanner(System.in);
         page.navigate("https://portal.leaselink.pl/");
         assert laseLinkPhone != null;
-        page.locator("id=CallbackPanel_txtPhoneNumber").fill(CryptoText.decodeDES(laseLinkPhone));
-        if (page.locator("id=cookiescript_accept").isVisible()) {
-            page.locator("id=cookiescript_accept").click();
+        page.fill(locators.getLeaseLinkPhoneLocator(),CryptoText.decodeDES(laseLinkPhone));
+        if (page.isVisible(locators.getLeaseLinkCookiesButtonLocator())) {
+            page.locator(locators.getLeaseLinkCookiesButtonLocator()).click();
         }
-        page.locator("id=CallbackPanel_btnPin").click();
+        page.click(locators.getLeaseLinkPinButtonLocator());
         System.out.println("Podaj kod otrzymany SMS'em od LeaseLink: ");
         String SmsCode = scanner.nextLine();
-        page.locator("id=CallbackPanel_txtPinNumber").fill(SmsCode);
-        page.locator("id=CallbackPanel_btnLogin").click();
-        Locator logoPortal = page.locator("id=divLogoPortal");
+        page.fill(locators.getLeaseLinkPinTextLocator(),SmsCode);
+        page.click(locators.getLeaseLinkUserNameLocator());
+        Locator logoPortal = page.locator(locators.getLeaseLinkLogoLocator());
         logoPortal.waitFor();
-        Locator InvoiceNumber = page.locator("//tr[contains(@id,'grdFaktury_DXDataRow0')]/td[2]");
+        Locator InvoiceNumber = page.locator(locators.getLeaseInvoiceNumberLocator());
         InvoiceNumber.waitFor();
         String invoiceName = InvoiceNumber.innerText();
         fileName = "LeaseLink_" + invoiceName.replace("/", "-") + ".pdf";
-        Download download = page.waitForDownload(() -> page.locator("//tr[contains(@id,'grdFaktury_DXDataRow0')]//a[contains(@class,'fa-file-pdf')]").click());
+        Download download = page.waitForDownload(() -> page.click(locators.getLeaseDownloadButtonLocator()));
         download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
         download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
         System.out.println("Pobrano plik: " + fileName);

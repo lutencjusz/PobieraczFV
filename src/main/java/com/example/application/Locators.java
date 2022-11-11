@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class Locators {
 //    Fakturownia
-    private final String fakturowniaLoginButtonLocator = "//a[@class='button-outline']/span[text()='Zaloguj się']";
+    final String fakturowniaLoginButtonLocator = "//a[@class='button-outline']/span[text()='Zaloguj się']";
     final String fakturowniaUserNameLocator = "//*[@id='user_session_login']";
     final String fakturowniaPasswordLocator = "//*[@id='user_session_password']";
     final String fakturowniaSubmitButtonLocator = "//input[@type='submit']";
@@ -40,6 +40,16 @@ public class Locators {
     final String tMobilePaidPaymentsLinkLocator = "//a[text()='zapłacone rachunki']";
     final String tMobileInvoiceNumberTextLocator = "//li[1]//li[1]//div[@class='label']/span[2]";
     final String tMobileDownloadButtonLocator = "//ul/li[1]//li[1]//a[contains(text(),'pobierz')]";
+    // LeaseLink
+    final String leaseLinkPhoneLocator = "id=CallbackPanel_txtPhoneNumber";
+    final String leaseLinkCookiesButtonLocator = "id=cookiescript_accept";
+    final String leaseLinkPinButtonLocator = "id=CallbackPanel_btnPin";
+    final String leaseLinkPinTextLocator = "id=CallbackPanel_txtPinNumber";
+    final String leaseLinkUserNameLocator = "id=CallbackPanel_btnLogin";
+    final String leaseLinkLogoLocator = "id=divLogoPortal";
+    final String leaseInvoiceNumberLocator = "//tr[contains(@id,'grdFaktury_DXDataRow0')]/td[2]";
+    final String leaseDownloadButtonLocator = "//tr[contains(@id,'grdFaktury_DXDataRow0')]//a[contains(@class,'fa-file-pdf')]";
+
 
 
 }

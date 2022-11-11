@@ -47,6 +47,7 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 @StyleSheet("/style.css")
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
+    private final int NOTIFICATION_DURATION_IN_MIN_SEC = 2000;
     Registration broadcasterRegistration;
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();
@@ -57,11 +58,16 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     Grid<Test> grid;
 
+    UI ui;
+
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+
+        int REFRESH_INTERVAL_UI_IN_MIN_SEC = 3000;
+
+        ui = getUI().isPresent() ? getUI().get() : null;
         date = LocalDate.now();
         servicesCounter = new Html("<b>Początkowa ilość serwisów: " + inMemoRep.getTests().size() + "</b>");
-        super.onAttach(attachEvent);
         HorizontalLayout logo = new HorizontalLayout();
         Image image = new Image("/icon.png", "Logo");
         image.setHeight("10%");
@@ -190,10 +196,24 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 buttons
         );
 
+        ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
+
         broadcasterRegistration = Broadcaster.register(message -> {
             System.out.println("Test '" + message + "' się zakończył i odświeżam grid");
-            UI ui = attachEvent.getUI();
-            ui.access(this::refreshItems);
+            try {
+                ui.access(() -> {
+                    UI.setCurrent(ui);
+                    refreshItems();
+                    Notification finish = Notification.show("Zakończono pobieranie FV dla " + message);
+                    finish.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    finish.setPosition(Notification.Position.TOP_CENTER);
+                    finish.addOpenedChangeListener(not -> refreshItems());
+                    finish.setDuration(NOTIFICATION_DURATION_IN_MIN_SEC);
+                    finish.setOpened(true);
+                });
+            } catch (UIDetachedException e) {
+                System.out.println("Nastąpił wyjątek w " + message);
+            }
         });
     }
 
@@ -359,8 +379,8 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             notification.setPosition(Notification.Position.TOP_CENTER);
             notification.addOpenedChangeListener(not -> refreshItems());
+            notification.setDuration(NOTIFICATION_DURATION_IN_MIN_SEC);
             notification.setOpened(true);
-            notification.setVisible(true);
         }
     }
 

@@ -193,17 +193,14 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     public Image createImagePng(Test test) {
-        String linkScreen;
-        if (test.getStatus().equals("pass")) {
-            linkScreen = "/png/" + test.getName().toLowerCase() + ".png";
-        } else {
-            linkScreen = "Brak_obrazka.png";
-        }
+
+        String linkScreen = test.getStatus().equals("pass") ? "/png/" + test.getName().toLowerCase() + ".png" : "Brak_obrazka.png";
+
         imagePng = new Image(linkScreen, "screen shot");
         imagePng.setWidth("50px");
         imagePng.setHeight("50px");
         imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
-        imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie");
+        imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie " + test.getName());
         return imagePng;
     }
 
@@ -213,19 +210,19 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         switch (test.getStatus()) {
             case "todo":
                 theme = "badge primary";
-                statusToolTipDesc = statusToolTipDesc + "TODO - test nie został uruchomiony, dane z poprzedniego testu";
+                statusToolTipDesc += "TODO - test nie został uruchomiony, dane z poprzedniego testu";
                 break;
             case "pass":
                 theme = "badge success primary";
-                statusToolTipDesc = statusToolTipDesc + "PASS - test wykonany pozytywnie, dane są aktualne";
+                statusToolTipDesc += "PASS - test wykonany pozytywnie, dane są aktualne";
                 break;
             case "fail":
                 theme = "badge error primary";
-                statusToolTipDesc = statusToolTipDesc + "FAIL - test nie zakończył się pozytywnie, dane z poprzedniego testu";
+                statusToolTipDesc += "FAIL - test nie zakończył się pozytywnie, dane z poprzedniego testu";
                 break;
             default:
                 theme = "badge contrast primary";
-                statusToolTipDesc = statusToolTipDesc + "test jest w trakcie wykonywania...";
+                statusToolTipDesc += "test jest w trakcie wykonywania...";
                 break;
         }
         Span badge = new Span(test.getStatus().toUpperCase());
@@ -294,7 +291,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             grid.getDataProvider().refreshAll();
         });
         trashButton.setIcon(new Icon(VaadinIcon.TRASH));
-        trashButton.getElement().setProperty("title", "Usuwa pojedynczy test z panelu. Test zostanie przywrócony po wciśnięciu 'Przywróć ustawienia'");
+        trashButton.getElement().setProperty("title", "Usuwa pojedynczy wpis z panelu dla serwisu " + test.getName() + ". Test zostanie przywrócony po wciśnięciu 'Przywróć ustawienia'");
 
         /* Przycisk uruchamiający pojedynczy test */
         Button testButton = new Button();
@@ -307,11 +304,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             executionTests(oneTest);
             refreshItems();
         });
-        testButton.getElement().setProperty("title", "Uruchomienie pojedynczego testu");
+        testButton.getElement().setProperty("title", "Uruchomienie testu tylko dla serwisu " + test.getName());
         testButton.setIcon(new Icon(VaadinIcon.PLAY_CIRCLE));
 
         /* link poglądu FV*/
-        String linkScreen = "/fv/" + test.getName() + "_" + test.getNrFv().replace("/", "-") + ".pdf";
+        String linkScreen = "/fv/" + test.getName() + "_" + test.getNrFv().replace("/", "-").trim() + ".pdf";
         Anchor downloadPdf = new Anchor(linkScreen);
         downloadPdf.setTarget("_blank");
         downloadPdf.setEnabled(test.getStatus().equals("pass"));
@@ -320,7 +317,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         downloadPdfButton.addThemeVariants(ButtonVariant.LUMO_ICON,
                 ButtonVariant.MATERIAL_CONTAINED, ButtonVariant.LUMO_TERTIARY);
         downloadPdfButton.setIcon(new Icon(VaadinIcon.DOWNLOAD));
-        downloadPdfButton.getElement().setProperty("title", "Otwiera na osobnej zakładce FV(pdf)");
+        downloadPdfButton.getElement().setProperty("title", "Otwiera na osobnej zakładce FV(pdf) dla linku: " + linkScreen);
 
         downloadPdf.add(downloadPdfButton);
 

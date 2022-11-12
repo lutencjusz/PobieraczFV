@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @Theme(value = "mytodo")
-@PWA(name = "Moje faktury", shortName = "Moje FV", offlineResources = {})
+@PWA(name = "Moje faktury", shortName = "Moje FV")
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 public class Application implements AppShellConfigurator {
 

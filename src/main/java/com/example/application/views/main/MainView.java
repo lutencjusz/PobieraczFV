@@ -193,6 +193,7 @@ public class MainView extends VerticalLayout {
         ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
 
         broadcasterRegistration = Broadcaster.register(message -> {
+            assert ui != null;
             try {
                 ui.access(() -> {
                     UI.setCurrent(ui);

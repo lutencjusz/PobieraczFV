@@ -86,7 +86,7 @@ public class MainView extends VerticalLayout {
         polishI18nDatePicker.setDateFormat("dd/MM/yyyy");
         polishI18nDatePicker.setFirstDayOfWeek(1);
         datePicker.setI18n(polishI18nDatePicker);
-        datePicker.getElement().setProperty("title", "Data wygenerowania FV, istotna przy pobieraniu z Fakturowni (rok i miesiąc)");
+        datePicker.getElement().setProperty("title", "Data pobrania FV, istotna przy pobieraniu z Fakturowni (tylko rok i miesiąc)");
         datePicker.addValueChangeListener(datePickerLocalDateComponentValueChangeEvent -> date = datePickerLocalDateComponentValueChangeEvent.getValue());
 
         logo.add(
@@ -226,21 +226,21 @@ public class MainView extends VerticalLayout {
         String theme;
         String statusToolTipDesc = "Status: ";
         switch (test.getStatus().toString()) {
-            case "todo":
+            case "progress":
                 theme = "badge primary";
-                statusToolTipDesc += "TODO - test nie został uruchomiony, dane z poprzedniego testu";
+                statusToolTipDesc += "PROGRESS - test jest w trakcie wykonywania...";
                 break;
             case "pass":
                 theme = "badge success primary";
-                statusToolTipDesc += "PASS - test wykonany pozytywnie, dane są aktualne";
+                statusToolTipDesc += "PASS - test wykonany pozytywnie, dane do FV są aktualne";
                 break;
             case "fail":
                 theme = "badge error primary";
-                statusToolTipDesc += "FAIL - test nie zakończył się pozytywnie, dane z poprzedniego testu";
+                statusToolTipDesc += "FAIL - test nie zakończył się pozytywnie, FV nie pobrane";
                 break;
             default:
-                theme = "badge contrast primary";
-                statusToolTipDesc += "test jest w trakcie wykonywania...";
+                theme = "badge contrast";
+                statusToolTipDesc += "TODO - test nie został uruchomiony, FV nie pobrane";
                 break;
         }
         Span badge = new Span(test.getStatus().toString().toUpperCase());
@@ -263,15 +263,16 @@ public class MainView extends VerticalLayout {
         TextField nrFv = new TextField("Numer FV");
         TextField dropboxLink = new TextField("dropboxLink");
         Checkbox isInteractionNeed = new Checkbox("Czy wymaga wymiany informacji");
+        Checkbox isDatePickerNeed = new Checkbox("Czy wymaga ustawienia daty");
 
-        addTestLayout.add(name, url, nrFv, dropboxLink, isInteractionNeed);
+        addTestLayout.add(name, url, nrFv, dropboxLink, isInteractionNeed, isDatePickerNeed);
 
         Button cancelBtn = new Button("Anuluj");
         cancelBtn.addClickListener(buttonClickEvent -> addTestDialog.close());
 
         Button addBtn = new Button("Dodaj");
         addBtn.addClickListener(buttonClickEvent -> {
-            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), TestStatus.todo, isInteractionNeed.getValue()));
+            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), TestStatus.todo, isInteractionNeed.getValue(), isDatePickerNeed.getValue()));
             addTestDialog.close();
             refreshItems();
         });
@@ -328,7 +329,7 @@ public class MainView extends VerticalLayout {
         testButton.setEnabled(!test.getStatus().equals(TestStatus.progress));
 
         /* link poglądu FV*/
-        String linkScreen = "/fv/" + test.getName() + "_" + test.getNrFv().replace("/", "-").trim() + ".pdf";
+        String linkScreen = "/fv/" + test.getName() + "_" + (test.getNrFv().get(0)).replace("/", "-").trim() + ".pdf";
         Anchor downloadPdf = new Anchor(linkScreen);
         downloadPdf.setTarget("_blank");
         downloadPdf.setEnabled(test.getStatus().equals(TestStatus.pass));
@@ -345,22 +346,41 @@ public class MainView extends VerticalLayout {
         interactionButton.addThemeVariants(ButtonVariant.LUMO_ICON,
                 ButtonVariant.MATERIAL_CONTAINED, ButtonVariant.LUMO_TERTIARY);
         interactionButton.setIcon(new Icon(VaadinIcon.EXCHANGE));
-        interactionButton.getElement().setProperty("title", "Serwis S" + test.getName() + " wymaga wprowadzenia danych przez konsolę");
+        interactionButton.getElement().setProperty("title", "Serwis " + test.getName() + " wymaga wprowadzenia danych przez konsolę");
+
+        /* Wskaźnik ustawienia daty w kalendarzu*/
+        Button datePickerButton = new Button();
+        datePickerButton.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.MATERIAL_CONTAINED, ButtonVariant.LUMO_TERTIARY);
+        datePickerButton.setIcon(new Icon(VaadinIcon.DATE_INPUT));
+        datePickerButton.getElement().setProperty("title", "Serwis " + test.getName() + " wymaga ustawienia daty w kalendarzu");
 
         /* Dodanie przycisków do layoutu */
         horizontalLayout.add(downloadPdf, testButton, trashButton);
         if (test.isInteractionNeed()) {
             horizontalLayout.add(interactionButton);
         }
+        if (test.isDatePickerNeed()) {
+            horizontalLayout.add(datePickerButton);
+        }
         horizontalLayout.setJustifyContentMode(START);
         horizontalLayout.setSpacing(false);
         return horizontalLayout;
     }
 
-    private Anchor createLinkToNrFv(Test test) {
-        Anchor anchor = new Anchor(test.getDropboxLink(), test.getNrFv());
-        anchor.setTarget("_blank");
-        return anchor;
+    private VerticalLayout createLinkToNrFv(Test test) {
+        VerticalLayout verticalLayout = new VerticalLayout();
+        for (String nr : test.getNrFv()) {
+            Anchor anchor;
+            if (test.getNrFv().size() > 1) {
+                anchor = new Anchor(test.getDropboxLink().substring(0, 54) + test.getName() + "_" + nr.replace("/", "-") + ".pdf", nr);
+            } else {
+                anchor = new Anchor(test.getDropboxLink(), nr);
+            }
+            anchor.setTarget("_blank");
+            verticalLayout.add(anchor);
+        }
+        return verticalLayout;
     }
 
     private ProgressBar createTestProgress(Test test) {

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -86,7 +87,7 @@ public class InvoicesDownloadTest extends TestFixtures {
 
     public void fakturownia(LocalDate date) {
         sendProgress("Fakturownia", 0.0);
-        String invoicesName = "";
+        List<String> nrFvFiltered = new ArrayList<>();
         boolean isFoundAnyInvoice = false;
         launchBrowser();
         createContextAndPage();
@@ -124,18 +125,18 @@ public class InvoicesDownloadTest extends TestFixtures {
                     System.out.println("Pobieram FV nr: " + nr);
                     page.locator(String.format(locators.getFakturowniaCogIconLocator(), nr)).last().click();
                     Download download = page.waitForDownload(() -> page.locator(String.format(locators.getFakturowniaDownloadLocator(), nr)).click());
-                    fileName = "Fakturownia_FV" + year + "-" + month + "-" + nr.substring(10) + ".pdf";
+                    fileName = "Fakturownia_" + nr.replace("/","-") + ".pdf";
                     download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
                     download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
                     System.out.println("Pobieram pliki do scieżki: " + fileName);
-                    invoicesName += isFoundAnyInvoice ? invoicesName + ", " + fileName : fileName;
+                    nrFvFiltered.add(nr);
                     isFoundAnyInvoice = true;
                 }
             }
             if (!isFoundAnyInvoice) {
                 throw new Exception("invoices not found");
             } else {
-                inMemoRep.updateTestData("Fakturownia", invoicesName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+                inMemoRep.updateTestData("Fakturownia", nrFvFiltered, PATH_TO_DROPBOX + fileName, TestStatus.pass);
             }
         } catch (Exception e) {
             inMemoRep.setStatus("Fakturownia", TestStatus.fail);

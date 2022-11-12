@@ -100,7 +100,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid.setItems(inMemoRep.getTests());
         grid.addSelectionListener(selection -> System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size()));
         grid.addComponentColumn(this::createStatusBadge).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
-        grid.addComponentColumn(this::createTestProgress).setHeader("Postęp testu").setKey("progress");
+        grid.addComponentColumn(this::createTestProgress).setHeader("Postęp pobierania").setKey("progress");
         grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true)
                 .getElement().setProperty("title", "Nazwa serwisu, z którego jest pobierana FV");
         grid.addComponentColumn(this::createLinkToNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true).getElement().setProperty("title", "Numer ostatniej pobranej FV");

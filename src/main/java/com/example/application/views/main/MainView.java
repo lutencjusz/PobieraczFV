@@ -46,8 +46,8 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 @StyleSheet("/style.css")
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
-    private final int NOTIFICATION_DURATION_IN_MIN_SEC = 2000;
-    private final int REFRESH_INTERVAL_UI_IN_MIN_SEC = 500;
+    final int NOTIFICATION_DURATION_IN_MIN_SEC = 2000;
+    final int REFRESH_INTERVAL_UI_IN_MIN_SEC = 500;
     Registration broadcasterRegistration;
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();

@@ -14,16 +14,15 @@ import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.progressbar.ProgressBarVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -48,6 +47,7 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     private final int NOTIFICATION_DURATION_IN_MIN_SEC = 2000;
+    private final int REFRESH_INTERVAL_UI_IN_MIN_SEC = 500;
     Registration broadcasterRegistration;
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();
@@ -62,9 +62,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-
-        int REFRESH_INTERVAL_UI_IN_MIN_SEC = 3000;
-
         ui = getUI().isPresent() ? getUI().get() : null;
         date = LocalDate.now();
         servicesCounter = new Html("<b>Początkowa ilość serwisów: " + inMemoRep.getTests().size() + "</b>");
@@ -102,12 +99,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.setItems(inMemoRep.getTests());
         grid.addSelectionListener(selection -> System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size()));
-
         grid.addComponentColumn(this::createStatusBadge).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
+        grid.addComponentColumn(this::createTestProgress).setHeader("Postęp testu").setKey("progress");
         grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true)
                 .getElement().setProperty("title", "Nazwa serwisu, z którego jest pobierana FV");
-        grid.addColumn(Test::getNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true).getElement().setProperty("title", "Numer ostatniej pobranej FV");
-        grid.addColumn(Test::getDropboxLink).setHeader("Link do Dropbox").setKey("link");
+        grid.addComponentColumn(this::createLinkToNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true).getElement().setProperty("title", "Numer ostatniej pobranej FV");
         grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy"))
                 .setSortable(true).setHeader("Estymowana data dostarczenia")
                 .setKey("date")
@@ -123,8 +119,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 .setSortable(true);
         grid.getColumnByKey("status")
                 .setSortable(true);
-        grid.getColumnByKey("link")
-                .setSortable(false);
         grid.setHeight("500px");
 
         HorizontalLayout buttons = new HorizontalLayout();
@@ -199,17 +193,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
 
         broadcasterRegistration = Broadcaster.register(message -> {
-            System.out.println("Test '" + message + "' się zakończył i odświeżam grid");
+            System.out.println("Dla testu '" + message + "' odświeżam grid");
             try {
                 ui.access(() -> {
                     UI.setCurrent(ui);
                     refreshItems();
-                    Notification finish = Notification.show("Zakończono pobieranie FV dla " + message);
-                    finish.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                    finish.setPosition(Notification.Position.TOP_CENTER);
-                    finish.addOpenedChangeListener(not -> refreshItems());
-                    finish.setDuration(NOTIFICATION_DURATION_IN_MIN_SEC);
-                    finish.setOpened(true);
                 });
             } catch (UIDetachedException e) {
                 System.out.println("Nastąpił wyjątek w " + message);
@@ -344,13 +332,12 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         Anchor downloadPdf = new Anchor(linkScreen);
         downloadPdf.setTarget("_blank");
         downloadPdf.setEnabled(test.getStatus().equals(TestStatus.pass));
-
         Button downloadPdfButton = new Button();
+
         downloadPdfButton.addThemeVariants(ButtonVariant.LUMO_ICON,
                 ButtonVariant.MATERIAL_CONTAINED, ButtonVariant.LUMO_TERTIARY);
         downloadPdfButton.setIcon(new Icon(VaadinIcon.DOWNLOAD));
         downloadPdfButton.getElement().setProperty("title", "Otwiera na osobnej zakładce FV(pdf) dla linku: " + linkScreen);
-
         downloadPdf.add(downloadPdfButton);
 
         /* Wskaźnik wymagania interakcji*/
@@ -368,6 +355,26 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         horizontalLayout.setJustifyContentMode(START);
         horizontalLayout.setSpacing(false);
         return horizontalLayout;
+    }
+
+    private Anchor createLinkToNrFv(Test test) {
+        Anchor anchor = new Anchor(test.getDropboxLink(), test.getNrFv());
+        anchor.setTarget("_blank");
+        return anchor;
+    }
+
+    private ProgressBar createTestProgress(Test test) {
+        Double progress = test.getProgress();
+        ProgressBar progressBar = new ProgressBar();
+        if (progress == 1.0 && !test.getStatus().equals(TestStatus.fail)) {
+            progressBar.addThemeVariants(ProgressBarVariant.LUMO_SUCCESS);
+        }
+        if (test.getStatus().equals(TestStatus.fail)) {
+            progressBar.addThemeVariants(ProgressBarVariant.LUMO_ERROR);
+        }
+        progressBar.setIndeterminate(test.getStatus().equals(TestStatus.progress) && progress == 0);
+        progressBar.setValue(test.getProgress());
+        return progressBar;
     }
 
     private void executionTests(Set<Test> tests) {

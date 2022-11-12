@@ -49,6 +49,15 @@ public class InMemoRep {
         }
     }
 
+    public void setProgress(String name, double progress){
+        Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
+        if (test.isPresent()){
+            test.get().setProgress(progress);
+        } else {
+            System.out.println("Nie odświeżyłem postępu testu");
+        }
+    }
+
     public void updateTestData(String name, String nrFv, String dropboxLink, TestStatus status) {
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
         if (test.isPresent()) {

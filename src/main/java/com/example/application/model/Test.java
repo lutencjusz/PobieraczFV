@@ -17,6 +17,8 @@ public class Test {
     private LocalDate estimatedDeliveryDate;
     private TestStatus status;
     private boolean isInteractionNeed;
+
+    private Double progress;
     public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, TestStatus status, boolean isInteractionNeed) {
         this.id = counter++;
         this.name = name;
@@ -26,5 +28,6 @@ public class Test {
         this.nrFv = nrFv;
         this.dropboxLink = dropboxLink;
         this.isInteractionNeed = isInteractionNeed;
+        this.progress = 0.0;
     }
 }

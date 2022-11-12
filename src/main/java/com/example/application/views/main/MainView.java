@@ -101,23 +101,26 @@ public class MainView extends VerticalLayout {
         grid.addSelectionListener(selection -> System.out.printf("Ilość zaznaczonych testów: %s%n", selection.getAllSelectedItems().size()));
         grid.addComponentColumn(this::createStatusBadge).setHeader("Status").setKey("status").setAutoWidth(true).setFlexGrow(0);
         grid.addComponentColumn(this::createTestProgress).setHeader("Postęp pobierania").setKey("progress");
-        grid.addColumn(Test::getName).setHeader("Nazwa serwisu").setKey("name").setFooter(servicesCounter).setResizable(true)
-                .getElement().setProperty("title", "Nazwa serwisu, z którego jest pobierana FV");
-        grid.addComponentColumn(this::createLinkToNrFv).setHeader("Numer FV").setKey("nrfv").setResizable(true).getElement().setProperty("title", "Numer ostatniej pobranej FV");
+        grid.addColumn(Test::getName).setHeader(createHeaderWithTitle("Nazwa serwisu", "Nazwa serwisu, z którego będą pobierane FV"))
+                .setKey("name").setFooter(servicesCounter)
+                .setResizable(true);
+        grid.addComponentColumn(this::createLinkToNrFv).setHeader(createHeaderWithTitle("Numer FV", "Numer/y faktur pobranych z serwisu"))
+                .setKey("nrfv")
+                .setResizable(true);
         grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy"))
-                .setSortable(true).setHeader("Estymowana data dostarczenia")
-                .setKey("date")
-                .getElement().setProperty("title", "Ostatnia data pobrania FV");
-        grid.addComponentColumn(this::createImagePng).setKey("screenshot").setHeader("Screeny");
-        grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid)).setHeader("Akcje");
+                .setHeader(createHeaderWithTitle("Data pobrania", "Przypuszczalna data pobrania FV z serwisu, nie jest to data wystawienia"))
+                .setKey("date");
+        grid.addComponentColumn(this::createImagePng)
+                .setKey("screenshot")
+                .setHeader(createHeaderWithTitle("Screeny", "Obraz z serwisu pokazujący zestawienie FV w celach porównawczych"));
+        grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid))
+                .setHeader(createHeaderWithTitle("Akcje", "Czynności, które można wykonać na poszczególnych serwisach"));
 
         grid.addThemeVariants(GridVariant.LUMO_NO_ROW_BORDERS,
                 GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
         grid.setColumnReorderingAllowed(true);
 
         grid.getColumnByKey("name")
-                .setSortable(true);
-        grid.getColumnByKey("status")
                 .setSortable(true);
         grid.setHeight("500px");
 
@@ -409,6 +412,19 @@ public class MainView extends VerticalLayout {
             notification.setDuration(NOTIFICATION_DURATION_IN_MIN_SEC);
             notification.setOpened(true);
         }
+    }
+
+    private Component createHeaderWithTitle(String headerName, String headerTitle) {
+        Span span = new Span(headerName);
+        Icon icon = VaadinIcon.INFO_CIRCLE.create();
+        icon.getElement().setAttribute("title", headerTitle);
+        icon.getStyle().set("height", "var(--lumo-font-size-m)").set("color",
+                "var(--lumo-contrast-70pct)");
+
+        HorizontalLayout layout = new HorizontalLayout(span, icon);
+        layout.setAlignItems(Alignment.START);
+        layout.setSpacing(false);
+        return layout;
     }
 
     @Override

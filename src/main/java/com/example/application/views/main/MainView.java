@@ -41,7 +41,6 @@ import java.util.Set;
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.AROUND;
 import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.START;
 
-
 @PageTitle("Tests")
 @Route(value = "")
 @StyleSheet("/style.css")

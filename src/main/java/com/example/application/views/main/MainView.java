@@ -14,7 +14,10 @@ import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -25,8 +28,6 @@ import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.progressbar.ProgressBarVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
@@ -44,7 +45,7 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 @PageTitle("Tests")
 @Route(value = "")
 @StyleSheet("/style.css")
-public class MainView extends VerticalLayout implements BeforeEnterObserver {
+public class MainView extends VerticalLayout {
 
     final int NOTIFICATION_DURATION_IN_MIN_SEC = 2000;
     final int REFRESH_INTERVAL_UI_IN_MIN_SEC = 500;
@@ -193,7 +194,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
 
         broadcasterRegistration = Broadcaster.register(message -> {
-            System.out.println("Dla testu '" + message + "' odświeżam grid");
             try {
                 ui.access(() -> {
                     UI.setCurrent(ui);
@@ -389,10 +389,6 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
             notification.setDuration(NOTIFICATION_DURATION_IN_MIN_SEC);
             notification.setOpened(true);
         }
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
     }
 
     @Override

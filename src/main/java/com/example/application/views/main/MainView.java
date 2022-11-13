@@ -210,7 +210,6 @@ public class MainView extends VerticalLayout {
         });
 
         executeTestsButton.addClickShortcut(Key.ENTER);
-//        refreshItems();
 
         add(
                 HeaderLayout,
@@ -218,7 +217,7 @@ public class MainView extends VerticalLayout {
                 buttons
         );
 
-//        ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
+        grid.asMultiSelect().select(inMemoRep.getTests());
 
         broadcasterRegistration = Broadcaster.register(message -> {
             assert ui != null;

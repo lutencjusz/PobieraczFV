@@ -374,12 +374,14 @@ public class MainView extends VerticalLayout {
     private VerticalLayout createLinkToNrFv(Test test) {
         VerticalLayout verticalLayout = new VerticalLayout();
         for (String nr : test.getNrFv()) {
-            Anchor anchor;
+            String path;
             if (test.getNrFv().size() > 1) {
-                anchor = new Anchor(test.getDropboxLink().substring(0, 54) + test.getName() + "_" + nr.replace("/", "-") + ".pdf", nr);
+                path = test.getDropboxLink().substring(0, 54) + test.getName() + "_" + nr.replace("/", "-") + ".pdf";
             } else {
-                anchor = new Anchor(test.getDropboxLink(), nr);
+                path = test.getDropboxLink();
             }
+            path = "file://"+path.replace("\\","/");
+            Anchor anchor = new Anchor(path, nr);
             anchor.setTarget("_blank");
             verticalLayout.add(anchor);
         }

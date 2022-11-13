@@ -1,4 +1,4 @@
-package com.example.application.utils;
+package com.example.application.services;
 
 import com.vaadin.flow.shared.Registration;
 

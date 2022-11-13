@@ -3,7 +3,8 @@ package com.example.application.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,13 +18,14 @@ public class Test {
     private String url;
     private List<String> nrFv;
     private String dropboxLink;
-    private LocalDate estimatedDeliveryDate;
+    private LocalDateTime estimatedDeliveryDate;
+    private Duration duration;
     private TestStatus status;
     private boolean isInteractionNeed;
     private boolean isDatePickerNeed;
 
     private Double progress;
-    public Test(String name, String url, String nrFv, String dropboxLink, LocalDate estimatedDeliveryDate, TestStatus status, boolean isInteractionNeed, boolean isDatePickerNeed) {
+    public Test(String name, String url, String nrFv, String dropboxLink, LocalDateTime estimatedDeliveryDate, TestStatus status, boolean isInteractionNeed, boolean isDatePickerNeed) {
         this.id = counter++;
         this.name = name;
         this.url = url;
@@ -34,5 +36,6 @@ public class Test {
         this.isInteractionNeed = isInteractionNeed;
         this.isDatePickerNeed = isDatePickerNeed;
         this.progress = 0.0;
+        this.duration = Duration.ZERO;
     }
 }

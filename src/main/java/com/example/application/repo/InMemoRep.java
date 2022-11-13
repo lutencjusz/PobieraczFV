@@ -7,7 +7,8 @@ import lombok.Setter;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,12 +22,12 @@ public class InMemoRep {
 
     @PostConstruct
     public void initData() {
-        tests.add(new Test("LeaseLink", "link1", "...", "...", LocalDate.now(), TestStatus.todo, true, false));
-        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false, false));
-        tests.add(new Test("PKO", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false, false));
-        tests.add(new Test("T-Mobile", "link1", "...", "...", LocalDate.now(), TestStatus.todo, true, false));
-        tests.add(new Test("Toyota", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false, false));
-        tests.add(new Test("Fakturownia", "link1", "...", "...", LocalDate.now(), TestStatus.todo, false,true));
+        tests.add(new Test("LeaseLink", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, true, false));
+        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));
+        tests.add(new Test("PKO", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));
+        tests.add(new Test("T-Mobile", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, true, false));
+        tests.add(new Test("Toyota", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));
+        tests.add(new Test("Fakturownia", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false,true));
     }
 
     public List<Test> getTests() {
@@ -50,6 +51,15 @@ public class InMemoRep {
         }
     }
 
+    public void setDuration(String name, Duration duration){
+        Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
+        if (test.isPresent()){
+            test.get().setDuration(duration);
+        } else {
+            System.out.println("Nie odświeżyłem postępu testu");
+        }
+    }
+
     public void setProgress(String name, double progress){
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
         if (test.isPresent()){
@@ -59,25 +69,27 @@ public class InMemoRep {
         }
     }
 
-    public void updateTestData(String name, String nrFv, String dropboxLink, TestStatus status) {
+    public void updateTestData(String name, String nrFv, String dropboxLink, TestStatus status, Duration duration) {
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
         if (test.isPresent()) {
             test.get().setNrFv(new ArrayList<>(Collections.singleton(nrFv)));
             test.get().setDropboxLink(dropboxLink);
-            test.get().setEstimatedDeliveryDate(LocalDate.now());
+            test.get().setEstimatedDeliveryDate(LocalDateTime.now());
             test.get().setStatus(status);
+            test.get().setDuration(duration);
         } else {
             System.out.println("Nie odświeżyłem danych");
         }
     }
 
-    public void updateTestData(String name, List<String> nrFv, String dropboxLink, TestStatus status) {
+    public void updateTestData(String name, List<String> nrFv, String dropboxLink, TestStatus status, Duration duration) {
         Optional<Test> test = tests.stream().filter(item -> item.getName().equals(name)).findFirst();
         if (test.isPresent()) {
             test.get().setNrFv(nrFv);
             test.get().setDropboxLink(dropboxLink);
-            test.get().setEstimatedDeliveryDate(LocalDate.now());
+            test.get().setEstimatedDeliveryDate(LocalDateTime.now());
             test.get().setStatus(status);
+            test.get().setDuration(duration);
         } else {
             System.out.println("Nie odświeżyłem danych");
         }

@@ -3,7 +3,7 @@ package com.example.application.tests;
 import com.example.application.Locators;
 import com.example.application.model.TestStatus;
 import com.example.application.repo.InMemoRep;
-import com.example.application.utils.Broadcaster;
+import com.example.application.services.Broadcaster;
 import com.example.application.utils.CryptoText;
 import com.microsoft.playwright.*;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -11,7 +11,9 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -86,6 +88,8 @@ public class InvoicesDownloadTest extends TestFixtures {
     }
 
     public void fakturownia(LocalDate date) {
+        LocalDateTime beginTest = LocalDateTime.now();
+        LocalDateTime endTest;
         sendProgress("Fakturownia", 0.0);
         List<String> nrFvFiltered = new ArrayList<>();
         boolean isFoundAnyInvoice = false;
@@ -125,7 +129,7 @@ public class InvoicesDownloadTest extends TestFixtures {
                     System.out.println("Pobieram FV nr: " + nr);
                     page.locator(String.format(locators.getFakturowniaCogIconLocator(), nr)).last().click();
                     Download download = page.waitForDownload(() -> page.locator(String.format(locators.getFakturowniaDownloadLocator(), nr)).click());
-                    fileName = "Fakturownia_" + nr.replace("/","-") + ".pdf";
+                    fileName = "Fakturownia_" + nr.replace("/", "-") + ".pdf";
                     download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
                     download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
                     System.out.println("Pobieram pliki do scieżki: " + fileName);
@@ -136,20 +140,25 @@ public class InvoicesDownloadTest extends TestFixtures {
             if (!isFoundAnyInvoice) {
                 throw new Exception("invoices not found");
             } else {
-                inMemoRep.updateTestData("Fakturownia", nrFvFiltered, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+                closeContext();
+                closeBrowser();
+                endTest = LocalDateTime.now();
+                inMemoRep.updateTestData("Fakturownia", nrFvFiltered, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
             }
         } catch (Exception e) {
+            endTest = LocalDateTime.now();
             inMemoRep.setStatus("Fakturownia", TestStatus.fail);
-            Broadcaster.broadcast("PKO");
+            inMemoRep.setDuration("Fakturownia", Duration.between(beginTest, endTest));
+            Broadcaster.broadcast("Fakturownia");
             return;
         }
-        closeContext();
-        closeBrowser();
         Broadcaster.broadcast("Fakturownia");
         sendProgress("Fakturownia", 1.0);
     }
 
     public void pko() {
+        LocalDateTime beginTest = LocalDateTime.now();
+        LocalDateTime endTest;
         sendProgress("PKO", 0.0);
         String invoiceName;
         launchBrowser();
@@ -178,19 +187,24 @@ public class InvoicesDownloadTest extends TestFixtures {
             System.out.println("Pobrano plik: " + fileName);
             sendProgress("PKO", 0.9);
         } catch (Exception e) {
+            endTest = LocalDateTime.now();
+            inMemoRep.setDuration("PKO", Duration.between(beginTest, endTest));
             inMemoRep.setStatus("PKO", TestStatus.fail);
             Broadcaster.broadcast("PKO");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("PKO", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+        endTest = LocalDateTime.now();
+        inMemoRep.updateTestData("PKO", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
         Broadcaster.broadcast("PKO");
         sendProgress("PKO", 1.0);
     }
 
 
     public void toyota() {
+        LocalDateTime beginTest = LocalDateTime.now();
+        LocalDateTime endTest;
         sendProgress("Toyota", 0.0);
         launchBrowser();
         createContextAndPage();
@@ -225,19 +239,24 @@ public class InvoicesDownloadTest extends TestFixtures {
             System.out.println("Pobrano plik: " + fileName);
             sendProgress("Toyota", 0.9);
         } catch (Exception e) {
+            endTest = LocalDateTime.now();
+            inMemoRep.setDuration("Toyota", Duration.between(beginTest, endTest));
             inMemoRep.setStatus("Toyota", TestStatus.fail);
             Broadcaster.broadcast("Toyota");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("Toyota", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+        endTest = LocalDateTime.now();
+        inMemoRep.updateTestData("Toyota", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
         Broadcaster.broadcast("Toyota");
         sendProgress("Toyota", 1.0);
     }
 
 
     public void tMobile() {
+        LocalDateTime beginTest = LocalDateTime.now();
+        LocalDateTime endTest;
         sendProgress("T-Mobile", 0.0);
         launchBrowser();
         createContextAndPage();
@@ -287,18 +306,23 @@ public class InvoicesDownloadTest extends TestFixtures {
             System.out.println("Pobrano plik: " + fileName);
             sendProgress("T-Mobile", 0.9);
         } catch (Exception e) {
+            endTest = LocalDateTime.now();
+            inMemoRep.setDuration("T-Mobile", Duration.between(beginTest, endTest));
             inMemoRep.setStatus("T-Mobile", TestStatus.fail);
             Broadcaster.broadcast("T-Mobile");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("T-Mobile", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+        endTest = LocalDateTime.now();
+        inMemoRep.updateTestData("T-Mobile", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
         sendProgress("T-Mobile", 1.0);
     }
 
 
     public void leaseLink() {
+        LocalDateTime beginTest = LocalDateTime.now();
+        LocalDateTime endTest;
         sendProgress("LeaseLink", 0.0);
         launchBrowser();
         createContextAndPage();
@@ -338,19 +362,24 @@ public class InvoicesDownloadTest extends TestFixtures {
             System.out.println("Pobrano plik: " + fileName);
             sendProgress("LeaseLink", 0.9);
         } catch (Exception e) {
+            endTest = LocalDateTime.now();
+            inMemoRep.setDuration("LeaseLink", Duration.between(beginTest, endTest));
             inMemoRep.setStatus("LeaseLink", TestStatus.fail);
             Broadcaster.broadcast("LeaseLink");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("LeaseLink", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+        endTest = LocalDateTime.now();
+        inMemoRep.updateTestData("LeaseLink", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
         Broadcaster.broadcast("LeaseLink");
         sendProgress("LeaseLink", 1.0);
     }
 
 
     public void microsoft() {
+        LocalDateTime beginTest = LocalDateTime.now();
+        LocalDateTime endTest;
         sendProgress("Microsoft", 0.0);
         launchBrowser();
         createContextAndPage();
@@ -396,13 +425,16 @@ public class InvoicesDownloadTest extends TestFixtures {
             System.out.println("Pobrano plik: " + fileName);
             sendProgress("Microsoft", 0.9);
         } catch (Exception e) {
+            endTest = LocalDateTime.now();
+            inMemoRep.setDuration("Microsoft", Duration.between(beginTest, endTest));
             inMemoRep.setStatus("Microsoft", TestStatus.fail);
             Broadcaster.broadcast("Microsoft");
             return;
         }
         closeContext();
         closeBrowser();
-        inMemoRep.updateTestData("Microsoft", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass);
+        endTest = LocalDateTime.now();
+        inMemoRep.updateTestData("Microsoft", invoiceName, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
         sendProgress("Microsoft", 1.0);
     }
 }

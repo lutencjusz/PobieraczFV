@@ -4,7 +4,7 @@ import com.example.application.ThreadTest;
 import com.example.application.model.Test;
 import com.example.application.model.TestStatus;
 import com.example.application.repo.InMemoRep;
-import com.example.application.utils.Broadcaster;
+import com.example.application.services.Broadcaster;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -22,18 +22,21 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.progressbar.ProgressBarVariant;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.renderer.LocalDateRenderer;
+import com.vaadin.flow.data.renderer.LocalDateTimeRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +50,6 @@ import static com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyConte
 public class MainView extends VerticalLayout {
 
     final int NOTIFICATION_DURATION_IN_MIN_SEC = 2000;
-    final int REFRESH_INTERVAL_UI_IN_MIN_SEC = 500;
     Registration broadcasterRegistration;
     @Autowired
     InMemoRep inMemoRep = new InMemoRep();
@@ -65,10 +67,14 @@ public class MainView extends VerticalLayout {
         ui = getUI().isPresent() ? getUI().get() : null;
         date = LocalDate.now();
         servicesCounter = new Html("<b>Początkowa ilość serwisów: " + inMemoRep.getTests().size() + "</b>");
-        HorizontalLayout logo = new HorizontalLayout();
+
+        FlexLayout HeaderLayout = new FlexLayout();
+        HeaderLayout.setAlignItems(Alignment.CENTER);
+        HeaderLayout.setWidthFull();
+
         Image image = new Image("/icon.png", "Logo");
-        image.setHeight("10%");
-        image.setWidth("10%");
+        image.setHeight("75px");
+        image.setWidth("75px");
         image.setId("logo");
 
         DatePicker datePicker = new DatePicker("Wybierz datę wystawienia faktury:");
@@ -89,11 +95,25 @@ public class MainView extends VerticalLayout {
         datePicker.getElement().setProperty("title", "Data pobrania FV, istotna przy pobieraniu z Fakturowni (tylko rok i miesiąc)");
         datePicker.addValueChangeListener(datePickerLocalDateComponentValueChangeEvent -> date = datePickerLocalDateComponentValueChangeEvent.getValue());
 
-        logo.add(
-                image,
-                new H2("Pobieracz faktur"),
-                datePicker
+        Button logout = new Button();
+        logout.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_LARGE, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+        logout.setIcon(new Icon(VaadinIcon.POWER_OFF));
+        logout.addClickListener(buttonClickEvent -> UI.getCurrent().close());
+
+        FlexLayout wrapper = new FlexLayout(logout);
+        wrapper.setJustifyContentMode(JustifyContentMode.END);
+        wrapper.setAlignSelf(Alignment.START);
+
+        HeaderLayout.add(
+                new HorizontalLayout(
+                        image,
+                        new H2("Pobieracz faktur"),
+                        datePicker
+                ),
+                wrapper
         );
+        HeaderLayout.setFlexGrow(1, wrapper);
+        HeaderLayout.setAlignSelf(Alignment.START, wrapper);
 
         grid = new Grid<>(Test.class, false);
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
@@ -107,11 +127,16 @@ public class MainView extends VerticalLayout {
         grid.addComponentColumn(this::createLinkToNrFv).setHeader(createHeaderWithTitle("Numer FV", "Numer/y faktur pobranych z serwisu"))
                 .setKey("nrfv")
                 .setResizable(true);
-        grid.addColumn(new LocalDateRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy"))
+        grid.addColumn(new LocalDateTimeRenderer<>(Test::getEstimatedDeliveryDate, "dd/MM/yyyy HH:mm:ss"))
                 .setHeader(createHeaderWithTitle("Data pobrania", "Przypuszczalna data pobrania FV z serwisu, nie jest to data wystawienia"))
                 .setKey("date");
+        grid.addColumn(test -> DurationFormatUtils.formatDuration(test.getDuration().toMillis(), "mm:ss", true))
+                .setHeader(createHeaderWithTitle("Czas trwania", "Czas pobierania FV z serwisu (mm:ss)"))
+                .setKey("duration")
+                .setWidth("30px");
         grid.addComponentColumn(this::createImagePng)
                 .setKey("screenshot")
+                .setWidth("20px")
                 .setHeader(createHeaderWithTitle("Screeny", "Obraz z serwisu pokazujący zestawienie FV w celach porównawczych"));
         grid.addComponentColumn(test -> createButtons(test, inMemoRep.getTests(), grid))
                 .setHeader(createHeaderWithTitle("Akcje", "Czynności, które można wykonać na poszczególnych serwisach"));
@@ -155,13 +180,13 @@ public class MainView extends VerticalLayout {
 
         cancelButton.addClickListener(buttonClickEvent -> {
             inMemoRep.clear();
-            refreshItems();
+            Broadcaster.broadcast("Odświeżenie");
         });
 
         initButton.addClickListener(buttonClickEvent -> {
             inMemoRep.clear();
             inMemoRep.initData();
-            refreshItems();
+            Broadcaster.broadcast("Odświeżenie");
         });
 
         executeTestsButton.addClickListener(buttonClickEvent -> {
@@ -185,15 +210,15 @@ public class MainView extends VerticalLayout {
         });
 
         executeTestsButton.addClickShortcut(Key.ENTER);
-        refreshItems();
+//        refreshItems();
 
         add(
-                logo,
+                HeaderLayout,
                 grid,
                 buttons
         );
 
-        ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
+//        ui.setPollInterval(REFRESH_INTERVAL_UI_IN_MIN_SEC);
 
         broadcasterRegistration = Broadcaster.register(message -> {
             assert ui != null;
@@ -275,9 +300,9 @@ public class MainView extends VerticalLayout {
 
         Button addBtn = new Button("Dodaj");
         addBtn.addClickListener(buttonClickEvent -> {
-            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDate.now(), TestStatus.todo, isInteractionNeed.getValue(), isDatePickerNeed.getValue()));
+            inMemoRep.add(new Test(name.getValue(), url.getValue(), nrFv.getValue(), dropboxLink.getValue(), LocalDateTime.now(), TestStatus.todo, isInteractionNeed.getValue(), isDatePickerNeed.getValue()));
             addTestDialog.close();
-            refreshItems();
+            Broadcaster.broadcast("Odświeżenie");
         });
         addTestDialog.add(addTestLayout);
         addTestDialog.getFooter().add(addBtn, cancelBtn);
@@ -325,7 +350,7 @@ public class MainView extends VerticalLayout {
             Set<Test> oneTest = new HashSet<>();
             oneTest.add(test);
             executionTests(oneTest);
-            refreshItems();
+            Broadcaster.broadcast("Odświeżenie");
         });
         testButton.getElement().setProperty("title", "Uruchomienie testu tylko dla serwisu " + test.getName());
         testButton.setIcon(new Icon(VaadinIcon.PLAY_CIRCLE));
@@ -380,7 +405,7 @@ public class MainView extends VerticalLayout {
             } else {
                 path = test.getDropboxLink();
             }
-            path = "file://"+path.replace("\\","/");
+            path = "file://" + path.replace("\\", "/");
             Anchor anchor = new Anchor(path, nr);
             anchor.setTarget("_blank");
             verticalLayout.add(anchor);
@@ -406,11 +431,10 @@ public class MainView extends VerticalLayout {
         for (Test test : tests) {
             ThreadTest testThread = new ThreadTest(test, date);
             testThread.start();
-            refreshItems();
+            Broadcaster.broadcast("Odświeżenie");
             Notification notification = Notification.show("Uruchomiono test: " + test.getName());
             notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             notification.setPosition(Notification.Position.TOP_CENTER);
-            notification.addOpenedChangeListener(not -> refreshItems());
             notification.setDuration(NOTIFICATION_DURATION_IN_MIN_SEC);
             notification.setOpened(true);
         }

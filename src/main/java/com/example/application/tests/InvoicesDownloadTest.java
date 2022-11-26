@@ -14,9 +14,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -87,6 +85,24 @@ public class InvoicesDownloadTest extends TestFixtures {
         Broadcaster.broadcast(name);
     }
 
+    /**
+     * Łączy dwie tablice o tych samych rozmiarach we wspólną listę
+     *
+     * @param invoicesNumbers   - tablica numerów FV
+     * @param invoicesSalesDays - tablica dni sprzedaży odpowiednich FV
+     * @return - listę połączonych tablic
+     */
+    private List<Map<String, String>> tablesToListConverter(List<String> invoicesNumbers, List<String> invoicesSalesDays) {
+        List<Map<String, String>> invoices = new ArrayList<>();
+        for (int i = 0; i < invoicesNumbers.size(); i++) {
+            Map<String, String> invoice = new HashMap<>();
+            invoice.put("nr", invoicesNumbers.get(i));
+            invoice.put("date", invoicesSalesDays.get(i));
+            invoices.add(invoice);
+        }
+        return invoices;
+    }
+
     public void fakturownia(LocalDate date) {
         LocalDateTime beginTest = LocalDateTime.now();
         LocalDateTime endTest;
@@ -114,31 +130,34 @@ public class InvoicesDownloadTest extends TestFixtures {
             sendProgress("Fakturownia", 0.6);
             page.locator(locators.getFakturowniaMenuItemInvoicesLocator()).first().click();
             page.locator(locators.getFakturowniaTotalSumLocator()).waitFor();
-            Locator rowLocator = page.locator(locators.getFakturowniaInvoicesColumnTableLocators());
+            Locator rowLocatorInvoicesNumbers = page.locator(locators.getFakturowniaInvoicesColumnTableLocators());
+            Locator rowLocatorInvoicesSalesDates = page.locator(locators.getFakturowniaInvoicesSalesDayColumnTableLocators());
             sendProgress("Fakturownia", 0.7);
-            List<String> invoicesNumbers = rowLocator.allTextContents();
+            List<String> invoicesSalesDays = rowLocatorInvoicesSalesDates.allTextContents();
+            List<String> invoicesNumbers = rowLocatorInvoicesNumbers.allTextContents();
+            List<Map<String, String>> invoices = tablesToListConverter(invoicesNumbers, invoicesSalesDays);
             int month = date.getMonthValue();
             System.out.println("Wybrałeś miesiąc: " + month);
             int year = date.getYear();
             System.out.println("Wybrałeś rok: " + year);
             sendProgress("Fakturownia", 0.8);
-            for (String nr : invoicesNumbers) {
-                int monthSubStr = Integer.parseInt(nr.substring(7, 9));
-                int yearSubStr = Integer.parseInt(nr.substring(2, 6));
+            for (Map<String, String> invoice : invoices) {
+                int monthSubStr = Integer.parseInt(invoice.get("date").substring(5, 7));
+                int yearSubStr = Integer.parseInt(invoice.get("date").substring(0, 4));
                 if (monthSubStr == month && yearSubStr == year) {
-                    System.out.println("Pobieram FV nr: " + nr);
-                    page.locator(String.format(locators.getFakturowniaCogIconLocator(), nr)).last().click();
-                    Download download = page.waitForDownload(() -> page.locator(String.format(locators.getFakturowniaDownloadLocator(), nr)).click());
-                    fileName = "Fakturownia_" + nr.replace("/", "-") + ".pdf";
+                    System.out.println("Pobieram FV nr: " + invoice.get("nr"));
+                    page.locator(String.format(locators.getFakturowniaCogIconLocator(), invoice.get("nr"))).last().click();
+                    Download download = page.waitForDownload(() -> page.locator(String.format(locators.getFakturowniaDownloadLocator(), invoice.get("nr"))).click());
+                    fileName = "Fakturownia_" + invoice.get("nr").replace("/", "-") + ".pdf";
                     download.saveAs(Paths.get(PATH_TO_DROPBOX + fileName));
                     download.saveAs(Paths.get(PATH_TO_RAPORT + fileName));
                     System.out.println("Pobieram pliki do scieżki: " + fileName);
-                    nrFvFiltered.add(nr);
+                    nrFvFiltered.add(invoice.get("nr"));
                     isFoundAnyInvoice = true;
                 }
             }
             if (!isFoundAnyInvoice) {
-                throw new Exception("invoices not found");
+                throw new Exception("Nie znaleziono faktur z tego okresu (dzień sprzedaży)");
             } else {
                 closeContext();
                 closeBrowser();
@@ -146,6 +165,7 @@ public class InvoicesDownloadTest extends TestFixtures {
                 inMemoRep.updateTestData("Fakturownia", nrFvFiltered, PATH_TO_DROPBOX + fileName, TestStatus.pass, Duration.between(beginTest, endTest));
             }
         } catch (Exception e) {
+            System.out.println("Błąd: " + e.getMessage());
             endTest = LocalDateTime.now();
             inMemoRep.setStatus("Fakturownia", TestStatus.fail);
             inMemoRep.setDuration("Fakturownia", Duration.between(beginTest, endTest));

@@ -12,6 +12,7 @@ public class Locators {
     final String fakturowniaMenuItemInvoicesLocator = "//li/a[contains(text(),'Faktury')]";
     final String fakturowniaTotalSumLocator = "//td[@id='total_count']";
     final String fakturowniaInvoicesColumnTableLocators = "//tr/td[2]//a";
+    final String fakturowniaInvoicesSalesDayColumnTableLocators = "//tr/td[6]//a";
     final String fakturowniaCogIconLocator = "//a[text()='%s']/../../..//span[@class='caret']";
     final String fakturowniaDownloadLocator = "//a[text()='%s']/../../..//a[text()='Drukuj']";
 //    PKO

@@ -239,12 +239,16 @@ public class MainView extends VerticalLayout {
 
     public Image createImagePng(Test test) {
 
-        String linkScreen = test.getStatus().equals(TestStatus.pass) ? "/png/" + test.getName().toLowerCase() + ".png" : "Brak_obrazka.png";
+        boolean statusScreen = test.getStatus().equals(TestStatus.pass) || test.getStatus().equals(TestStatus.todo);
+
+        String linkScreen = statusScreen ? "/png/" + test.getName().toLowerCase() + ".png" : "Brak_obrazka.png";
 
         imagePng = new Image(linkScreen, "screen shot");
         imagePng.setWidth("50px");
         imagePng.setHeight("50px");
-        imagePng.addClickListener(imageClickEvent -> openZoomImageDialog(linkScreen).open());
+        imagePng.addClickListener(imageClickEvent -> {
+            if (statusScreen) openZoomImageDialog(linkScreen).open();
+        });
         imagePng.getElement().setProperty("title", "Screen pokazujący dostępne FV w serwisie " + test.getName());
         return imagePng;
     }

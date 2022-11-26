@@ -23,7 +23,7 @@ public class InMemoRep {
     @PostConstruct
     public void initData() {
         tests.add(new Test("LeaseLink", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, true, false));
-        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));
+//        tests.add(new Test("Microsoft", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));
         tests.add(new Test("PKO", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));
         tests.add(new Test("T-Mobile", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, true, false));
         tests.add(new Test("Toyota", "link1", "...", "...", LocalDateTime.now(), TestStatus.todo, false, false));

@@ -98,7 +98,7 @@ public class MainView extends VerticalLayout {
         Button logout = new Button();
         logout.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_LARGE, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
         logout.setIcon(new Icon(VaadinIcon.POWER_OFF));
-        logout.addClickListener(buttonClickEvent -> UI.getCurrent().close());
+        logout.addClickListener(buttonClickEvent -> UI.getCurrent().getSession().close());
 
         FlexLayout wrapper = new FlexLayout(logout);
         wrapper.setJustifyContentMode(JustifyContentMode.END);

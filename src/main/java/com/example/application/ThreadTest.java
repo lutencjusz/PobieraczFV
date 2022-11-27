@@ -29,10 +29,6 @@ public class ThreadTest extends Thread {
                 invoicesDownloadTest.leaseLink();
                 break;
             }
-            case "microsoft":{
-                invoicesDownloadTest.microsoft();
-                break;
-            }
             case "t-mobile":{
                 invoicesDownloadTest.tMobile();
                 break;

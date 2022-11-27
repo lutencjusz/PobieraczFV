@@ -50,13 +50,4 @@ public class Locators {
     final String leaseLinkLogoLocator = "id=divLogoPortal";
     final String leaseLinkInvoiceNumberLocator = "//tr[contains(@id,'grdFaktury_DXDataRow0')]/td[2]";
     final String leaseLinkDownloadButtonLocator = "//tr[contains(@id,'grdFaktury_DXDataRow0')]//a[contains(@class,'fa-file-pdf')]";
-    // Microsoft
-    final String microsoftUserNameLocator = "id=i0116";
-    final String microsoftPasswordLocator = "id=i0118";
-    final String microsoftStaySignedButtonLocator = "id=idSIButton9";
-    final String microsoftMoreInfoButtonLocator = "//a[contains(text(), 'Skip for now')]";
-    final String microsoftEnableSecurityDefaultsButtonLocator = "id=btnEnableSecurityDefaults";
-    final String microsoftListInvoicesTableLocator = "//div[@data-automation-id='ListInvoiceList']";
-    final String microsoftInvoiceNumberTextLocator = "//div[@data-list-index='0']//div[@aria-colindex='2']/span";
-    final String microsoftDownloadButtonLocator = "//button[text()='Pobierz plik PDF']";
 }
